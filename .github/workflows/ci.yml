@@ -12,21 +12,40 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Homebrew gcc-16 + tools
+
+      # Same toolchain recipe as welder's own Linux CI (proven for the C#
+      # round-trip there): the DEFAULT brew gcc formula — its libstdc++ is
+      # linked into the linuxbrew prefix that brew-gcc binaries carry an
+      # RPATH to, so the dotnet host's loader resolves the shim's runtime.
+      # (The keg-only gcc@16 keeps its libs out of that prefix and the
+      # round-trip then fails with a GLIBCXX version gap.) dotnet comes from
+      # brew for the same reason welder's CI takes it from brew: one prefix,
+      # one loader story.
+      - name: Homebrew toolchain (gcc-16, ninja, dotnet)
         run: |
+          set -euo pipefail
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install gcc@16 ninja
+          brew update --quiet
+          brew install --quiet gcc ninja cmake dotnet
           echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
+
       - name: Configure
         run: |
+          set -euo pipefail
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_COMPILER=g++-16 \
             -DWELDER_CSHARP_WERROR=ON
+
       - name: Build
-        run: cmake --build build
+        run: |
+          set -euo pipefail
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          cmake --build build
+
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          set -euo pipefail
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          ctest --test-dir build --output-on-failure
