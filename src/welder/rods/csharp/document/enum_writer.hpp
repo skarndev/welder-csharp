@@ -53,6 +53,11 @@ struct enum_writer {
         out += "    public enum " + cs_name + " : " + underlying + "\n    {\n";
         out += values;
         out += "    }\n\n";
+        // A completed declaration — a legal cut point when the managed artifact
+        // is split (options::cs_files). Nested enums (sink != nullptr) land
+        // inside their owner's text and are never a boundary of their own.
+        if (!sink)
+            doc->section(cs_ns).breaks.push_back(out.size());
     }
 };
 

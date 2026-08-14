@@ -60,6 +60,16 @@ struct options {
         one of @ref shards files round-robin, so they compile in parallel.
         The managed side is unaffected — P/Invoke binds symbols, not TUs. */
     std::size_t shards{1};
+    /** How many files `Bindings.cs` is split into (default 1 — the single
+        file). Unlike @ref shards this is not a compile-time measure: Roslyn is
+        indifferent to file count (measured — one 11 MB file and 83 small ones
+        compile in the same time). It exists for the TOOLING around the
+        artifact: editors that will not open a multi-megabyte source, reviewable
+        diffs, and per-namespace goldens. A C# assembly has no translation-unit
+        boundary, so the split is unconditionally safe — names resolve
+        assembly-wide, `NativeMethods` is `partial`, and a namespace may be
+        reopened by any file. Parts land in `<stem>.<i>.cs` siblings. */
+    std::size_t cs_files{1};
 };
 
 /** One C# namespace's slice of the module: a nested C++ namespace maps to a
@@ -71,6 +81,12 @@ struct ns_section {
     std::string ns{};      /**< Dotted path below the root (`""` = the root). */
     std::string types{};   /**< Wrapper class + enum declarations. */
     std::string statics{}; /**< The namespace's `Global` static-class body. */
+    /** Offsets into @ref types where one declaration ends and the next begins,
+        recorded by the class/enum writers as they flush. Splitting
+        (@ref options::cs_files) may only cut here — a boundary the emitters
+        KNOW, so no part can ever end mid-declaration. Monotonic: every writer
+        appends. */
+    std::vector<std::size_t> breaks{};
 };
 
 /** The growing pair of documents shared by every writer handle: the native shim and
@@ -110,6 +126,10 @@ struct document {
     void advance_shard() { shard_cursor = (shard_cursor + 1) % shim_parts.size(); }
 
     std::string pinvoke{}; /**< `[LibraryImport]` declarations (inside NativeMethods). */
+    /** Offsets into @ref pinvoke at symbol boundaries (recorded when a
+        @ref bound_symbol finishes), so a split part never cuts a declaration in
+        half. `NativeMethods` is `partial`, so each part reopens it. */
+    std::vector<std::size_t> pinvoke_breaks{};
     std::vector<ns_section> sections{}; /**< Per-namespace types + Global bodies. */
     std::string containers{};   /**< Generated container-wrapper classes (root ns). */
     std::vector<std::string> container_keys{}; /**< Dedup (one wrapper per type). */
@@ -297,7 +317,151 @@ struct document {
 
     /** The finished `Bindings.cs` text.
         @return the managed artifact, with every reference placeholder resolved. */
-    std::string render_cs() const {
+    std::string render_cs() const { return render_cs_parts(1).front(); }
+
+    /** The managed artifact as @a n files (@ref options::cs_files).
+
+        Every part is a complete compilation unit: the same header, `using`
+        directives and root `namespace` block, then its slice of the surface.
+        The slicing is size-balanced but only ever cuts at a boundary the
+        emitters recorded (@ref ns_section::breaks, @ref pinvoke_breaks), and
+        each part reopens whatever scope its slice needs — a nested namespace,
+        or the `partial` `NativeMethods`. Part 0 additionally carries the
+        one-per-assembly scaffolding (the error contract, the wire structs,
+        `WelderInterop`, and `NativeMethods`' `Lib` constant plus the two
+        always-present thunk declarations).
+
+        `n == 1` reproduces @ref render_cs byte for byte — the single-file form
+        is the same code path, not a parallel one.
+        @param n the file count (clamped to ≥ 1).
+        @return the parts, in order. */
+    std::vector<std::string> render_cs_parts(std::size_t n) const {
+        if (n == 0)
+            n = 1;
+        // The items a part can be built from, in emission order. Anything
+        // pinned to part 0 (the scaffolding) is not an item — it is preamble.
+        struct item {
+            enum class kind { types, statics, containers, pinvoke } what;
+            std::string ns;   /**< The namespace to reopen (empty = root). */
+            std::string text; /**< The slice's text. */
+        };
+        std::vector<item> items{};
+        const auto slice_at = [](const std::string& text,
+                                 const std::vector<std::size_t>& breaks,
+                                 auto emit) {
+            std::size_t prev{0};
+            for (const std::size_t b : breaks) {
+                if (b > prev && b <= text.size())
+                    emit(text.substr(prev, b - prev));
+                prev = b;
+            }
+            if (prev < text.size())
+                emit(text.substr(prev));
+        };
+        // Emission order mirrors the single-file layout exactly: the P/Invoke
+        // class first (its prologue/epilogue ride the stream as chunks, so the
+        // block reads identically), then the root's types, the shared container
+        // wrappers, the root `Global`, and finally each nested namespace.
+        items.push_back({item::kind::pinvoke, "", _cs_pinvoke_prologue()});
+        slice_at(pinvoke, pinvoke_breaks, [&](std::string t) {
+            items.push_back({item::kind::pinvoke, "", std::move(t)});
+        });
+        items.push_back({item::kind::pinvoke, "", _cs_pinvoke_epilogue()});
+        for (const auto& s : sections)
+            if (s.ns.empty())
+                slice_at(s.types, s.breaks, [&](std::string t) {
+                    items.push_back({item::kind::types, s.ns, std::move(t)});
+                });
+        if (!containers.empty())
+            items.push_back({item::kind::containers, "", containers});
+        for (const auto& s : sections)
+            if (s.ns.empty() && !s.statics.empty())
+                items.push_back({item::kind::statics, s.ns, s.statics});
+        for (const auto& s : sections) {
+            if (s.ns.empty())
+                continue;
+            slice_at(s.types, s.breaks, [&](std::string t) {
+                items.push_back({item::kind::types, s.ns, std::move(t)});
+            });
+            if (!s.statics.empty())
+                items.push_back({item::kind::statics, s.ns, s.statics});
+        }
+
+        // Size-balanced assignment: walk the items once, starting a new part
+        // whenever the current one passes its share. Order is preserved, so a
+        // namespace's declarations stay contiguous and parts stay diffable.
+        std::size_t total{0};
+        for (const auto& it : items)
+            total += it.text.size();
+        const std::size_t target{total / n + 1};
+        std::vector<std::vector<const item*>> bins(n);
+        std::size_t bin{0}, filled{0};
+        for (const auto& it : items) {
+            if (bin + 1 < n && filled > target) {
+                ++bin;
+                filled = 0;
+            }
+            bins[bin].push_back(&it);
+            filled += it.text.size();
+        }
+
+        std::vector<std::string> parts{};
+        for (std::size_t p{0}; p < n; ++p) {
+            std::string out{_cs_header()};
+            out += "namespace " + opts.cs_namespace + "\n{\n";
+            if (p == 0)
+                out += _cs_scaffolding();
+            // Walk this bin, opening/closing a nested namespace or the partial
+            // NativeMethods as the run of items requires.
+            std::string open_ns{};
+            bool in_native{false};
+            const auto close_scope = [&] {
+                if (in_native) {
+                    out += "    }\n\n";
+                    in_native = false;
+                }
+                if (!open_ns.empty()) {
+                    out += "    }\n\n";
+                    open_ns.clear();
+                }
+            };
+            for (const item* it : bins[p]) {
+                if (it->what == item::kind::pinvoke) {
+                    if (!in_native) {
+                        close_scope();
+                        out += "    internal static partial class NativeMethods\n"
+                               "    {\n";
+                        in_native = true;
+                    }
+                    out += it->text;
+                    continue;
+                }
+                if (in_native || open_ns != it->ns) {
+                    close_scope();
+                    if (!it->ns.empty()) {
+                        out += "    namespace " + it->ns + "\n    {\n";
+                        open_ns = it->ns;
+                    }
+                }
+                if (it->what == item::kind::statics) {
+                    out += "    public static class Global\n    {\n";
+                    out += it->text;
+                    out += "    }\n\n";
+                } else {
+                    out += it->text;
+                }
+            }
+            close_scope();
+            out += "}\n";
+            parts.push_back(apply_type_renames(std::move(out)));
+        }
+        return parts;
+    }
+
+  private:
+    /** The file header every part opens with (comment banner, `#nullable`,
+        `using`s). @return the shared preamble text. */
+    std::string _cs_header() const {
         std::string out{
             "// <auto-generated> welder C#/.NET bindings. Do not edit -\n"
             "// regenerate via the welder_csharp_generate_bindings() target.\n"};
@@ -315,9 +479,16 @@ struct document {
                "using System;\n"
                "using System.Runtime.CompilerServices;\n"
                "using System.Runtime.InteropServices;\n\n";
-        out += "namespace " + opts.cs_namespace + "\n{\n";
+        return out;
+    }
+
+    /** The one-per-assembly scaffolding part 0 carries: the error contract, the
+        by-value wires, `WelderInterop`, and `NativeMethods`' constant plus the
+        two always-present declarations.
+        @return the scaffolding text, at namespace depth. */
+    std::string _cs_scaffolding() const {
         // The error contract: the blittable slot + the check-and-throw helper.
-        out +=
+        std::string out{
             "    /// <summary>The native error slot every welder thunk fills "
             "(code 0 = success).</summary>\n"
             "    [StructLayout(LayoutKind.Sequential)]\n"
@@ -422,45 +593,26 @@ struct document {
             "NativeMethods.welder_free(w.Data);\n"
             "            return _out;\n"
             "        }\n"
-            "    }\n\n";
-        // The P/Invoke surface: one partial static class (LibraryImport needs partial).
-        out += "    internal static partial class NativeMethods\n    {\n";
-        out += "        internal const string Lib = \"" + opts.library + "\";\n\n";
-        out += pinvoke;
-        out += "        [LibraryImport(Lib)] internal static partial void "
-               "welder_free(IntPtr p);\n";
-        out += "        [LibraryImport(Lib, StringMarshalling = "
+            "    }\n\n"};
+        return out;
+    }
+
+    /** `NativeMethods`' leading constant — the first P/Invoke chunk, so the
+        declarations that follow it read exactly as the single-file form did.
+        @return the `Lib` constant line. */
+    std::string _cs_pinvoke_prologue() const {
+        return "        internal const string Lib = \"" + opts.library + "\";\n\n";
+    }
+
+    /** The two declarations every assembly needs regardless of what is bound
+        (the allocator hooks the marshalling helpers call).
+        @return the trailing P/Invoke declarations. */
+    std::string _cs_pinvoke_epilogue() const {
+        return "        [LibraryImport(Lib)] internal static partial void "
+               "welder_free(IntPtr p);\n"
+               "        [LibraryImport(Lib, StringMarshalling = "
                "StringMarshalling.Utf8)] internal static partial IntPtr "
                "welder_dup_utf8(string s);\n";
-        out += "    }\n\n";
-        // The root namespace's own types, the (shared) container wrappers and
-        // its Global holder, then every NESTED namespace as a real C#
-        // namespace block — `using geo.Util;` works, and same-named types in
-        // different sub-namespaces are distinct types, exactly like C++.
-        for (const auto& s : sections)
-            if (s.ns.empty())
-                out += s.types;
-        out += containers;
-        for (const auto& s : sections)
-            if (s.ns.empty() && !s.statics.empty()) {
-                out += "    public static class Global\n    {\n";
-                out += s.statics;
-                out += "    }\n\n";
-            }
-        for (const auto& s : sections) {
-            if (s.ns.empty())
-                continue;
-            out += "    namespace " + s.ns + "\n    {\n";
-            out += s.types;
-            if (!s.statics.empty()) {
-                out += "    public static class Global\n    {\n";
-                out += s.statics;
-                out += "    }\n\n";
-            }
-            out += "    }\n\n";
-        }
-        out += "}\n";
-        return apply_type_renames(std::move(out));
     }
 };
 

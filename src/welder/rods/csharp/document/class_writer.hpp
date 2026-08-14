@@ -348,6 +348,11 @@ struct class_writer {
                        handle_field);
         }
         w.blank();
+        // A completed declaration — a legal cut point when the managed artifact
+        // is split (options::cs_files). A NESTED class (sink != nullptr) writes
+        // into its owner's buffer and is never a boundary of its own.
+        if (!sink)
+            doc->section(cs_ns).breaks.push_back(out.size());
     }
 };
 

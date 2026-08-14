@@ -345,8 +345,23 @@ struct rod {
                                const std::string& cs_path, options o) {
         const document doc{generate_document<Ns, Style>(std::move(o))};
         {
-            std::ofstream cs{cs_path};
-            cs << doc.render_cs();
+            // The managed artifact, as one file or as `<stem>.<i>.cs` siblings
+            // (options::cs_files). A C# assembly has no TU boundary, so this is
+            // purely for the tooling around the file — see the option's note.
+            const std::vector<std::string> parts{
+                doc.render_cs_parts(doc.opts.cs_files)};
+            for (std::size_t i{0}; i < parts.size(); ++i) {
+                std::string path{cs_path};
+                if (parts.size() > 1) {
+                    const std::string suffix{"." + std::to_string(i) + ".cs"};
+                    if (path.size() > 3 && path.ends_with(".cs"))
+                        path.replace(path.size() - 3, 3, suffix);
+                    else
+                        path += suffix;
+                }
+                std::ofstream cs{path};
+                cs << parts[i];
+            }
         }
         for (std::size_t i{0}; i < doc.shard_count(); ++i) {
             std::string path{shim_path};

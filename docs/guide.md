@@ -198,9 +198,10 @@ welder_csharp_generate_bindings(mymod_csharp
 
 builds a generator, runs it (→ `shim.cpp` + `Bindings.cs`), and compiles the
 shim into `libmymod_native.{so,dylib}` / `mymod_native.dll`. Compile the
-generated `Bindings.cs` (path in the target's `WELDER_CSHARP_BINDINGS` property)
-into any .NET 7+ project with the shared library next to the executable. The
-generator TU:
+generated `Bindings.cs` (path — or paths, with `CS_FILES` below — in the
+target's `WELDER_CSHARP_BINDINGS` property) into any .NET 7+ project with the
+shared library next to the executable. Prefer shipping the *package* (next
+section) over handing consumers the generated source. The generator TU:
 
 ```cpp
 #include <welder/rods/csharp/module.hpp>
@@ -210,6 +211,28 @@ WELDER_CSHARP_MAIN(mymod, "mymod.hpp", "mymod_native")
 
 Both helpers ship with the package — `find_package(welder)` defines them
 exactly like FetchContent (the `welder::csharp` generator target is exported).
+
+### Splitting the artifacts
+
+A big welded surface makes both artifacts big, and each has its own remedy:
+
+```cmake
+welder_csharp_generate_bindings(mymod_csharp
+  SOURCES gen.cpp LIBRARY mymod_native
+  SHARDS 32          # shim.0.cpp … shim.31.cpp  — parallel native compile
+  CS_FILES 24)       # Bindings.0.cs … Bindings.23.cs — tooling only
+```
+
+`SHARDS` is a *build* measure: one reflection-heavy shim TU can take minutes and
+gigabytes, and the shards compile in parallel.
+
+`CS_FILES` is **not** — Roslyn compiles one multi-megabyte file and many small
+ones in the same time (measured on an 11 MB wrapper: 39 s vs 40 s). Split
+because a multi-megabyte source is hostile to editors, diffs and review, not
+because it compiles faster. It is always safe: a C# assembly has no
+translation-unit boundary, `NativeMethods` is `partial`, and any file may
+reopen a namespace; parts are cut only at declaration boundaries the emitters
+record.
 
 ## Distributing: NuGet
 

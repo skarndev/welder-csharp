@@ -22,7 +22,11 @@
     (default 1): with N > 1 the shim is emitted as `<stem>.<i>.cpp` siblings of
     `argv[1]`, one independently compilable TU per shard, so a large welded surface
     builds in parallel instead of as one reflection-heavy compile (the CMake helper's
-    `SHARDS` argument drives this). The build-time analogue of a backend entry point.
+    `SHARDS` argument drives this). An optional `argv[4]` is the MANAGED file count
+    (default 1): with N > 1 the wrapper is emitted as `<stem>.<i>.cs` siblings of
+    `argv[2]` (the CMake helper's `CS_FILES` argument). That split is for tooling,
+    not compilation — a C# assembly has no translation-unit boundary. The build-time
+    analogue of a backend entry point.
     @param ns     the top-level namespace / module token.
     @param header the header the emitted shim `#include`s to see the welded types.
     @param lib    the P/Invoke library name (the shared-lib base name, e.g.
@@ -35,6 +39,9 @@
         if (argc > 3)                                                          \
             welder_opts_.shards =                                              \
                 static_cast<::std::size_t>(::std::atoi(argv[3]));              \
+        if (argc > 4)                                                          \
+            welder_opts_.cs_files =                                            \
+                static_cast<::std::size_t>(::std::atoi(argv[4]));              \
         ::welder::rods::csharp::rod::generate_files<^^ns>(                     \
             argc > 1 ? argv[1] : "shim.cpp",                                   \
             argc > 2 ? argv[2] : "Bindings.cs", welder_opts_);                 \

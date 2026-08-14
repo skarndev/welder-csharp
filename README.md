@@ -54,6 +54,16 @@ N > 1 the welded header is included by several TUs, so its namespace-scope
 function definitions must be `inline` (the ordinary header ODR rule; a
 single-TU shim silently tolerated violations).
 
+`CS_FILES <N>` does the same to the managed side — `Bindings.0.cs …
+Bindings.N-1.cs` — but for a different reason. It buys **no** build time:
+Roslyn compiles one multi-megabyte file and many small ones in the same time
+(measured on an 11 MB / 5894-type wrapper: 39 s vs 40 s). It is for the tooling
+around the artifact — editors that will not open a file that large, reviewable
+diffs, per-part goldens. The split is unconditionally safe: a C# assembly has
+no translation-unit boundary, names resolve assembly-wide, `NativeMethods` is
+`partial`, and any file may reopen a namespace. Parts are cut only at
+boundaries the emitters record, so a declaration is never halved.
+
 ## Tests
 
 `ctest` runs byte-exact goldens over a dedicated case set, consteval locks

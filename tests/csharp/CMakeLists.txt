@@ -150,6 +150,24 @@ add_test(NAME csharp.bindings_golden
 set_tests_properties(csharp.shim_golden csharp.bindings_golden PROPERTIES
   FIXTURES_REQUIRED csharp_native)
 
+# The MANAGED split (CS_FILES / options::cs_files): re-run the same generator
+# asking for three wrapper files, and assert the result is EQUIVALENT to the
+# single-file golden — every part brace-balanced, every declaration present
+# exactly once. Byte-equality is deliberately not the contract (each part
+# carries its own header and reopens its own scopes); what the golden above
+# locks is the single-file form, which is the same code path at n == 1.
+file(MAKE_DIRECTORY ${_ws}/split)   # the generator opens files, it does not mkdir
+add_test(NAME csharp.split_generate
+  COMMAND $<TARGET_FILE:welder_test_csharp_gen>
+          ${_ws}/split/shim.cpp ${_ws}/split/Bindings.cs 1 3)
+add_test(NAME csharp.split_equivalent
+  COMMAND ${CMAKE_COMMAND} -DSINGLE=${_ws}/Bindings.cs -DDIR=${_ws}/split
+          -DPARTS=3 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_split.cmake)
+set_tests_properties(csharp.split_generate PROPERTIES
+  FIXTURES_REQUIRED csharp_native FIXTURES_SETUP csharp_split)
+set_tests_properties(csharp.split_equivalent PROPERTIES
+  FIXTURES_REQUIRED "csharp_native;csharp_split")
+
 # The managed round-trip, gated on a dotnet SDK (like the lua-language-server /
 # uv gates: missing tool = skip with a message, the goldens still gate).
 find_program(WELDER_DOTNET NAMES dotnet)

@@ -36,7 +36,7 @@
 # runtimes are linked statically so the dll loads under a native (non-MSYS)
 # dotnet without libstdc++-6.dll/libgcc on PATH.
 function(welder_csharp_generate_bindings name)
-  cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS"
+  cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS;CS_FILES"
     "SOURCES;INCLUDE_DIRS;LINK;DEPENDS" ${ARGN})
   if(NOT CS_SOURCES)
     message(FATAL_ERROR "welder_csharp_generate_bindings(${name}): SOURCES is required")
@@ -71,6 +71,26 @@ function(welder_csharp_generate_bindings name)
     set(_shim_files ${_shim})
   endif()
 
+  # CS_FILES <N> (default 1): split the MANAGED wrapper into N files
+  # (Bindings.0.cs … Bindings.N-1.cs). Unlike SHARDS this is not a build-speed
+  # measure — Roslyn compiles one big file and many small ones in the same time,
+  # and a C# assembly has no translation-unit boundary. It exists for the tooling
+  # around the artifact: editors that refuse to open a multi-megabyte source,
+  # reviewable diffs, and per-part goldens. Always safe: names resolve
+  # assembly-wide, NativeMethods is partial, and any file may reopen a namespace.
+  if(NOT CS_CS_FILES)
+    set(CS_CS_FILES 1)
+  endif()
+  if(CS_CS_FILES GREATER 1)
+    set(_cs_files "")
+    math(EXPR _cs_last "${CS_CS_FILES} - 1")
+    foreach(_i RANGE 0 ${_cs_last})
+      list(APPEND _cs_files ${CS_OUTPUT_DIR}/Bindings.${_i}.cs)
+    endforeach()
+  else()
+    set(_cs_files ${_cs})
+  endif()
+
   # 1) the generator executable
   set(_gen ${name}_gen)
   add_executable(${_gen} ${CS_SOURCES})
@@ -86,11 +106,12 @@ function(welder_csharp_generate_bindings name)
 
   # 2) run it -> shim.cpp + Bindings.cs
   add_custom_command(
-    OUTPUT ${_shim_files} ${_cs}
-    COMMAND ${_gen} ${_shim} ${_cs} ${CS_SHARDS}
+    OUTPUT ${_shim_files} ${_cs_files}
+    COMMAND ${_gen} ${_shim} ${_cs} ${CS_SHARDS} ${CS_CS_FILES}
     DEPENDS ${_gen} ${CS_DEPENDS}
     VERBATIM
-    COMMENT "welder: generating C#/.NET bindings for ${name} (${CS_SHARDS} shim TU(s))")
+    COMMENT "welder: generating C#/.NET bindings for ${name} \
+(${CS_SHARDS} shim TU(s), ${CS_CS_FILES} managed file(s))")
 
   # 3) the native shared library from the generated shim (NOT welder_warnings:
   # the generated file is machine-written; wire-width conversions are implicit
@@ -102,7 +123,7 @@ function(welder_csharp_generate_bindings name)
   set_target_properties(${name} PROPERTIES
     CXX_SCAN_FOR_MODULES OFF
     OUTPUT_NAME ${CS_LIBRARY}
-    WELDER_CSHARP_BINDINGS ${_cs})
+    WELDER_CSHARP_BINDINGS "${_cs_files}")
   if(WIN32)
     # .NET's resolver probes <LIBRARY>.dll; MinGW would emit lib<LIBRARY>.dll.
     set_target_properties(${name} PROPERTIES PREFIX "")
@@ -164,7 +185,13 @@ function(welder_csharp_nuget_project name)
   endif()
   set(_rid ${_os}-${_arch})
 
+  # One <Compile> per generated wrapper file (CS_FILES may have split it).
   get_target_property(_bindings ${name} WELDER_CSHARP_BINDINGS)
+  set(_compile_items "")
+  foreach(_b IN LISTS _bindings)
+    string(APPEND _compile_items "    <Compile Include=\"${_b}\" />\n")
+  endforeach()
+  string(STRIP "${_compile_items}" _compile_items)
   file(GENERATE OUTPUT ${NG_OUTPUT_DIR}/${NG_PACKAGE_ID}.csproj CONTENT
 "<Project Sdk=\"Microsoft.NET.Sdk\">
   <PropertyGroup>
@@ -176,9 +203,17 @@ function(welder_csharp_nuget_project name)
     <ImplicitUsings>disable</ImplicitUsings>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- The rod emits an XML doc comment for every bound entity; without this
+         the package ships no .xml sidecar and consumers get bare IntelliSense
+         with no descriptions. CS1591 is silenced because the generated
+         scaffolding (handles, wire structs) is deliberately undocumented, and
+         CS0649 because a director/owner field is assigned only from native
+         code, which the C# compiler cannot see. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>\$(NoWarn);CS1591;CS0649</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include=\"${_bindings}\" />
+    ${_compile_items}
     <None Include=\"$<TARGET_FILE:${name}>\" Pack=\"true\"
           PackagePath=\"runtimes/${_rid}/native/\"
           CopyToOutputDirectory=\"PreserveNewest\" />

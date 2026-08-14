@@ -150,6 +150,29 @@ class bound_symbol {
         _doc->record_symbol(_symbol);
     }
 
+    /** Close the symbol: whatever it wrote to the P/Invoke buffer is complete,
+        so that buffer's current end is a legal cut point when the managed
+        artifact is split (@ref options::cs_files). Recorded here rather than by
+        counting lines at render time because only the symbol knows where its
+        own declaration ends. */
+    ~bound_symbol() {
+        if (_doc)
+            _doc->pinvoke_breaks.push_back(_doc->pinvoke.size());
+    }
+
+    /** Move: an emitter takes its symbol BY VALUE (`callable_emitter`), so the
+        boundary duty moves with it — the source is disarmed so only the live
+        object records, once. */
+    bound_symbol(bound_symbol&& o) noexcept
+        : _doc{o._doc}, _symbol{std::move(o._symbol)},
+          _wrapper_sink{o._wrapper_sink}, _wrapper_depth{o._wrapper_depth} {
+        o._doc = nullptr;
+    }
+    /** Copying would register the boundary twice; the type is move-only. */
+    bound_symbol(const bound_symbol&) = delete;
+    bound_symbol& operator=(const bound_symbol&) = delete;
+    bound_symbol& operator=(bound_symbol&&) = delete;
+
     /** The C symbol all three sinks coordinate on.
         @return the symbol text. */
     [[nodiscard]] const std::string& name() const { return _symbol; }
