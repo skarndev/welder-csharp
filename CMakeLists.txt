@@ -29,8 +29,7 @@ if(NOT TARGET welder::headers)
   include(FetchContent)
   FetchContent_Declare(welder
     GIT_REPOSITORY https://github.com/skarndev/welder.git
-    # TODO flip to `main` once welder's csharp-core extraction branch merges
-    GIT_TAG feature/csharp-core)
+    GIT_TAG main)
   FetchContent_MakeAvailable(welder)
 endif()
 
