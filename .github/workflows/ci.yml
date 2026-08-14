@@ -25,7 +25,9 @@ jobs:
         run: |
           set -euo pipefail
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew update --quiet
+          # brew's API CDN is occasionally flaky on runners; one retry, and a
+          # failed update is non-fatal (install re-fetches what it needs).
+          brew update --quiet || brew update --quiet || true
           brew install --quiet gcc ninja cmake dotnet
           echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
 
