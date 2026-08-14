@@ -156,7 +156,7 @@ class bound_symbol {
 
     /** The native-thunk sink (the shim buffer, top level).
         @return a positioned writer. */
-    [[nodiscard]] code_writer thunk() const { return code_writer{_doc->shim, 0}; }
+    [[nodiscard]] code_writer thunk() const { return code_writer{_doc->current_shim(), 0}; }
 
     /** The `[LibraryImport]` declaration sink (inside `NativeMethods`).
         @return a positioned writer. */

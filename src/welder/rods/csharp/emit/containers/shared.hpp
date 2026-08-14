@@ -61,7 +61,7 @@ class shared_box_emitter {
   private:
     /** Write the free thunk — a one-line delegation into `shim::sp_free`. */
     void emit_thunk() {
-        code_writer t{_doc->shim, 0};
+        code_writer t{_doc->current_shim(), 0};
         t.line("void {}(void* box) { wcs::shim::sp_free<^^{}>(box); }", _symbol,
                _payload_spelling);
         t.blank();

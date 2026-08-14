@@ -47,6 +47,7 @@ class namespace_emitter {
                or null for the resolved leaf name. */
     template <auto Fns, class Style = ::welder::naming::none>
     void emit_function_group(const char* name) {
+        _module.doc->advance_shard(); // a group is a self-contained shard unit
         const std::string wname{
             ::welder::name_of_or<Fns[0], cs, Style,
                                  ::welder::ent_kind::function>(name)};
@@ -79,6 +80,7 @@ class namespace_emitter {
         @param name an optional verbatim name override, or null. */
     template <std::meta::info Var, class Style = ::welder::naming::none>
     void emit_variable(const char* name) {
+        _module.doc->advance_shard(); // a variable is a self-contained shard unit
         constexpr std::meta::info VT{std::meta::type_of(Var)};
         ensure_for<VT>(*_module.doc);
         constexpr bool checked{(require_marshallable(VT, true), true)};

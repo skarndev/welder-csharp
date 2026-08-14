@@ -127,7 +127,7 @@ class director_emitter {
         tw.line("};");
         tw.line("static inline wcs_table_t wcs_tbl{};");
 
-        code_writer d{_module.doc->directors, 0};
+        code_writer d{_module.doc->current_directors(), 0};
         d.line("struct {} final : {} {", dir, qual);
         d.deeper().line("using {}::{};", qual,
                         qual.substr(qual.rfind(':') + 1));

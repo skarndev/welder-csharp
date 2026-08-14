@@ -35,9 +35,13 @@ welder_csharp_generate_bindings(welder_test_cs_operators
   OUTPUT_DIR ${_ws}/operators
   DEPENDS ${WELDER_TEST_COMMON_CPP}/operators.hpp)
 
+# SHARDS on the two heaviest behavioral pairs (inheritance: base chains +
+# upcast thunks; overridable: directors): the round-trip then proves a sharded
+# shim links and runs — every cross-TU seam the split can create is exercised.
 welder_csharp_generate_bindings(welder_test_cs_inheritance
   SOURCES cpp/gen_inheritance.cpp
   LIBRARY welder_test_cs_inheritance
+  SHARDS 3
   INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cpp ${WELDER_TEST_COMMON_CPP}
   OUTPUT_DIR ${_ws}/inheritance
   DEPENDS ${WELDER_TEST_COMMON_CPP}/inheritance.hpp)
@@ -45,6 +49,7 @@ welder_csharp_generate_bindings(welder_test_cs_inheritance
 welder_csharp_generate_bindings(welder_test_cs_overridable
   SOURCES cpp/gen_overridable.cpp
   LIBRARY welder_test_cs_overridable
+  SHARDS 3
   INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cpp ${WELDER_TEST_COMMON_CPP}
   OUTPUT_DIR ${_ws}/overridable
   DEPENDS ${WELDER_TEST_COMMON_CPP}/overridable.hpp)

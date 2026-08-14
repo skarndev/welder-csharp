@@ -70,7 +70,7 @@ class fixed_wrapper_emitter {
     /** Write the native op thunks — one-line delegations into the compiled
         `shim::arr_*` support templates, parameterized by element and extent. */
     void emit_thunks() {
-        code_writer t{_doc->shim, 0};
+        code_writer t{_doc->current_shim(), 0};
         t.line("void* {}_new(welder_error* err) { return "
                "wcs::shim::arr_new<{}>(err); }",
                _symbol_stem, _template_args);

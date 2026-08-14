@@ -45,6 +45,15 @@ welder_csharp_generate_bindings(my_bindings
 Requires gcc ≥ 16 with `-freflection` (welder's toolchain contract); a .NET
 SDK (net7+) only to consume the generated wrapper.
 
+**Large surfaces:** one reflection-heavy shim TU can dominate build time and
+memory. `SHARDS <N>` splits the shim into `shim.0.cpp … shim.N-1.cpp` that
+compile in parallel — each top-level class's thunks and director land whole in
+one shard, so the split is always link-correct. Pair a big `N` with a
+RAM-bounded Ninja job pool when the TUs are memory-heavy. One contract: with
+N > 1 the welded header is included by several TUs, so its namespace-scope
+function definitions must be `inline` (the ordinary header ODR rule; a
+single-TU shim silently tolerated violations).
+
 ## Tests
 
 `ctest` runs byte-exact goldens over a dedicated case set, consteval locks

@@ -54,6 +54,7 @@
 */
 
 #include <cstddef>
+#include <fstream>
 #include <meta>
 #include <ostream>
 #include <string>
@@ -319,19 +320,72 @@ struct rod {
         @param o    the module knobs (C# namespace, P/Invoke library, shim include). */
     template <std::meta::info Ns, class Style = dotnet>
     static void generate(std::ostream& shim, std::ostream& cs, options o) {
+        // One stream can only carry one shim TU — the sharded form goes
+        // through generate_files, which owns the per-part paths.
+        o.shards = 1;
+        const document doc{generate_document<Ns, Style>(std::move(o))};
+        shim << doc.render_shim();
+        cs << doc.render_cs();
+    }
+
+    /** Emit the artifacts to FILES — the form `WELDER_CSHARP_MAIN` uses, and
+        the only one that can shard the shim (@ref options::shards): with N
+        shards the shim lands in `<stem>.<i>.cpp` siblings of @a shim_path
+        (`shim.cpp` → `shim.0.cpp` … `shim.N-1.cpp`), each an independently
+        compilable TU, so a large welded surface builds in parallel instead of
+        as one reflection-heavy compile. `Bindings.cs` is unaffected —
+        P/Invoke binds symbols, not TUs.
+        @tparam Ns    a reflection of the (top-level) namespace / module.
+        @tparam Style the C# name style (defaults to @ref dotnet).
+        @param shim_path the shim's path (the derivation stem when sharding).
+        @param cs_path   the `Bindings.cs` path.
+        @param o         the module knobs (namespace, library, include, shards). */
+    template <std::meta::info Ns, class Style = dotnet>
+    static void generate_files(const std::string& shim_path,
+                               const std::string& cs_path, options o) {
+        const document doc{generate_document<Ns, Style>(std::move(o))};
+        {
+            std::ofstream cs{cs_path};
+            cs << doc.render_cs();
+        }
+        for (std::size_t i{0}; i < doc.shard_count(); ++i) {
+            std::string path{shim_path};
+            if (doc.shard_count() > 1) {
+                const std::string suffix{"." + std::to_string(i) + ".cpp"};
+                if (path.size() > 4 && path.ends_with(".cpp"))
+                    path.replace(path.size() - 4, 4, suffix);
+                else
+                    path += suffix;
+            }
+            std::ofstream shim{path};
+            shim << doc.render_shim(i);
+        }
+    }
+
+  private:
+    /** The one driver pass both emission forms share: run welder's generic
+        driver over @a Ns with this text-emitting backend, so the artifacts
+        cover exactly what would be bound at runtime — classes, enums, free
+        functions, namespace variables and nested namespaces.
+        @tparam Ns    a reflection of the (top-level) namespace / module.
+        @tparam Style the C# name style.
+        @param o the module knobs.
+        @return the filled two-artifact document. */
+    template <std::meta::info Ns, class Style>
+    static document generate_document(options o) {
         static_assert(std::meta::is_namespace(Ns),
                       "welder: csharp::generate<Ns>: Ns must reflect a namespace");
         document doc{};
         if (o.cs_namespace.empty())
             o.cs_namespace = std::define_static_string(std::meta::identifier_of(Ns));
         doc.opts = std::move(o);
+        doc.set_shard_count(doc.opts.shards);
         // Every nested C++ namespace becomes a REAL nested C# namespace; each
         // namespace's free functions / variables land in its `Global` static
         // class (C# has no namespace-scope functions), its types beside it.
         module_writer m{&doc, ""};
         ::welder::welder<rod, Style>::template weld_namespace<Ns>(m);
-        shim << doc.render_shim();
-        cs << doc.render_cs();
+        return doc;
     }
 };
 

@@ -79,7 +79,7 @@ class vector_wrapper_emitter {
     /** Write the native op thunks — one-line delegations into the compiled
         `shim::vec_*` support templates, parameterized by the element type. */
     void emit_thunks() {
-        code_writer t{_doc->shim, 0};
+        code_writer t{_doc->current_shim(), 0};
         t.line("void* {}_new(welder_error* err) { return "
                "wcs::shim::vec_new<{}>(err); }",
                _symbol_stem, _element_anchor);

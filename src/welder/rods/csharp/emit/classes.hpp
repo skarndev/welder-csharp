@@ -67,6 +67,11 @@ class class_opener {
         @return the class handle the member hooks write into. */
     template <class T, std::meta::info Decl, auto Bases>
     class_writer open(const char* name, const char* doc) {
+        // Each TOP-LEVEL class is the sharding unit: rotate first, so the
+        // class's whole emission — members, nested types, the containers it
+        // triggers, its director subclass — lands in one shim TU (see
+        // document::advance_shard; a no-op without sharding).
+        _module.doc->advance_shard();
         class_writer w{};
         w.doc = _module.doc;
         w.cs_name = name;

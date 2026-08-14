@@ -8,6 +8,7 @@
     produce `shim.cpp` + `Bindings.cs`, then compiles the shim into a shared library
     and hands the `.cs` to `dotnet`.
 */
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 
@@ -17,7 +18,11 @@
     Define a `main()` that emits the C#/.NET bindings for namespace @a ns.
 
     Writes the native shim to `argv[1]` and the C# wrapper to `argv[2]` (falling back
-    to `shim.cpp` / `Bindings.cs`). The build-time analogue of a backend entry point.
+    to `shim.cpp` / `Bindings.cs`). An optional `argv[3]` is the shim's SHARD count
+    (default 1): with N > 1 the shim is emitted as `<stem>.<i>.cpp` siblings of
+    `argv[1]`, one independently compilable TU per shard, so a large welded surface
+    builds in parallel instead of as one reflection-heavy compile (the CMake helper's
+    `SHARDS` argument drives this). The build-time analogue of a backend entry point.
     @param ns     the top-level namespace / module token.
     @param header the header the emitted shim `#include`s to see the welded types.
     @param lib    the P/Invoke library name (the shared-lib base name, e.g.
@@ -27,9 +32,11 @@
         ::welder::rods::csharp::options welder_opts_{};                        \
         welder_opts_.library = (lib);                                          \
         welder_opts_.shim_include = (header);                                  \
-        ::std::ofstream welder_shim_{argc > 1 ? argv[1] : "shim.cpp"};         \
-        ::std::ofstream welder_cs_{argc > 2 ? argv[2] : "Bindings.cs"};        \
-        ::welder::rods::csharp::rod::generate<^^ns>(welder_shim_, welder_cs_,  \
-                                                    welder_opts_);             \
+        if (argc > 3)                                                          \
+            welder_opts_.shards =                                              \
+                static_cast<::std::size_t>(::std::atoi(argv[3]));              \
+        ::welder::rods::csharp::rod::generate_files<^^ns>(                     \
+            argc > 1 ? argv[1] : "shim.cpp",                                   \
+            argc > 2 ? argv[2] : "Bindings.cs", welder_opts_);                 \
         return 0;                                                              \
     }

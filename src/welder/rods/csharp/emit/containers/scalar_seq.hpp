@@ -109,7 +109,7 @@ class scalar_seq_wrapper_emitter {
     void emit_thunks() {
         for (const char* leaf : {"_new", "_destroy", "_data", "_fill"})
             _doc->record_symbol(_symbol_stem + leaf);
-        code_writer t{_doc->shim, 0};
+        code_writer t{_doc->current_shim(), 0};
         t.line("void* {}_new(welder_error* err) { return wcs::shim::{}"
                "_new<{}>(err); }",
                _symbol_stem, _family_prefix, _template_args);

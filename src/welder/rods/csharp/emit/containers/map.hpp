@@ -135,7 +135,7 @@ class map_wrapper_emitter {
         `shim::map_*` support templates, parameterized by orderedness, key
         anchor and value anchor. */
     void emit_thunks() {
-        code_writer t{_doc->shim, 0};
+        code_writer t{_doc->current_shim(), 0};
         t.line("void* {}_new(welder_error* err) { return "
                "wcs::shim::map_new<{}>(err); }",
                _symbol_stem, _template_args);
