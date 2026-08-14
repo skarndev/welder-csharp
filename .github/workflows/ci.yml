@@ -7,20 +7,24 @@ on:
     - cron: "17 5 * * 1" # weekly against welder main: surface upstream breakage
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ---------------------------------------------------------------------------
+  # Linux — same toolchain recipe as welder's own Linux CI (proven for the C#
+  # round-trip there): the DEFAULT brew gcc formula — its libstdc++ is linked
+  # into the linuxbrew prefix that brew-gcc binaries carry an RPATH to, so the
+  # dotnet host's loader resolves the shim's runtime. (The keg-only gcc@16
+  # keeps its libs out of that prefix and the round-trip then fails with a
+  # GLIBCXX version gap.) dotnet from brew for the same one-prefix reason.
+  # ---------------------------------------------------------------------------
   linux:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      # Same toolchain recipe as welder's own Linux CI (proven for the C#
-      # round-trip there): the DEFAULT brew gcc formula — its libstdc++ is
-      # linked into the linuxbrew prefix that brew-gcc binaries carry an
-      # RPATH to, so the dotnet host's loader resolves the shim's runtime.
-      # (The keg-only gcc@16 keeps its libs out of that prefix and the
-      # round-trip then fails with a GLIBCXX version gap.) dotnet comes from
-      # brew for the same reason welder's CI takes it from brew: one prefix,
-      # one loader story.
       - name: Homebrew toolchain (gcc-16, ninja, dotnet)
         run: |
           set -euo pipefail
@@ -51,3 +55,83 @@ jobs:
           set -euo pipefail
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # macOS — welder's reference platform (Apple Silicon; Homebrew preinstalled
+  # and on PATH, no shellenv bootstrap needed). The round-trip's DOTNET_ROOT
+  # for the Homebrew dotnet layout is set by the test harness itself.
+  # ---------------------------------------------------------------------------
+  macos:
+    name: macos (gcc-16, brew)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Homebrew toolchain (gcc-16, ninja, dotnet)
+        run: |
+          set -euo pipefail
+          brew update --quiet || brew update --quiet || true
+          brew install --quiet gcc ninja cmake dotnet
+          gcc-16 --version
+
+      - name: Configure
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=g++-16 \
+            -DWELDER_CSHARP_WERROR=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Windows — MSYS2 UCRT64 mingw-w64 gcc 16 (mainline, carries -freflection),
+  # welder's proven Windows recipe: the MinGW-built shim dll (static gcc
+  # runtimes, PREFIX "" — handled by WelderCSharpModule.cmake) is loaded by the
+  # NATIVE .NET host, so dotnet comes from setup-dotnet, not msys2.
+  # ---------------------------------------------------------------------------
+  windows:
+    name: windows (mingw gcc-16, msys2)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      # setup-dotnet exports DOTNET_ROOT for the configure step below.
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up MSYS2 (UCRT64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git base-devel
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
+      - name: Configure
+        run: |
+          set -euo pipefail
+          gcc --version
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DWELDER_CSHARP_WERROR=ON \
+            -DWELDER_DOTNET="$(cygpath -m "${DOTNET_ROOT:-C:/Program Files/dotnet}/dotnet.exe")"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
