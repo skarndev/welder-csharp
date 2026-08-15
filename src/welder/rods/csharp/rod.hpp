@@ -377,11 +377,81 @@ struct rod {
         }
     }
 
+    // --- multi-TU generation ------------------------------------------------
+    // The document is RUNTIME state: reflection is per-TU, but nothing requires
+    // all of it to happen in ONE TU. A large surface (wowlib: ~1200 generated
+    // tables) makes the single generate TU a memory wall — begin_document /
+    // at() / contribute_namespace() / render_files() let the surface be split
+    // across TUs that LINK into one generator executable and append into one
+    // document, so the compile peak is max(TU), not sum, and the TUs compile in
+    // parallel. Cross-TU type references resolve at render: the symbol registry
+    // and the type-rename placeholders are document-global.
+
+    /** Begin a document for multi-TU assembly. The root C# namespace must be
+        set explicitly (@ref options::cs_namespace) — with no single walked
+        namespace there is nothing to derive it from. */
+    static document begin_document(options o) {
+        document doc{};
+        doc.opts = std::move(o);
+        doc.set_shard_count(doc.opts.shards);
+        return doc;
+    }
+
+    /** A module handle at dotted C# namespace @a cs_ns below the root
+        (`""` = the root): the hook a contributor TU welds its slice through —
+        `W::weld_type<T>(rod::at(doc, "Db.Tables"), "MapWotlk")`. */
+    static module_type at(document& doc, std::string cs_ns) {
+        return module_type{&doc, std::move(cs_ns)};
+    }
+
+    /** Walk namespace @a Ns into @a doc — the whole-namespace form of a
+        contribution (the single-shot entry points use exactly this). */
+    template <std::meta::info Ns, class Style = dotnet>
+    static void contribute_namespace(document& doc) {
+        static_assert(std::meta::is_namespace(Ns),
+                      "welder: csharp::contribute_namespace<Ns>: Ns must "
+                      "reflect a namespace");
+        // Every nested C++ namespace becomes a REAL nested C# namespace; each
+        // namespace's free functions / variables land in its `Global` static
+        // class (C# has no namespace-scope functions), its types beside it.
+        module_writer m{&doc, ""};
+        ::welder::welder<rod, Style>::template weld_namespace<Ns>(m);
+    }
+
+    /** Render an assembled document to files — the tail of
+        @ref generate_files, usable after any number of contributions. */
+    static void render_files(const document& doc, const std::string& shim_path,
+                             const std::string& cs_path) {
+        const std::vector<std::string> parts{
+            doc.render_cs_parts(doc.opts.cs_files)};
+        for (std::size_t i{0}; i < parts.size(); ++i) {
+            std::string path{cs_path};
+            if (parts.size() > 1) {
+                const std::string suffix{"." + std::to_string(i) + ".cs"};
+                if (path.size() > 3 && path.ends_with(".cs"))
+                    path.replace(path.size() - 3, 3, suffix);
+                else
+                    path += suffix;
+            }
+            std::ofstream cs{path};
+            cs << parts[i];
+        }
+        for (std::size_t i{0}; i < doc.shard_count(); ++i) {
+            std::string path{shim_path};
+            if (doc.shard_count() > 1) {
+                const std::string suffix{"." + std::to_string(i) + ".cpp"};
+                if (path.size() > 4 && path.ends_with(".cpp"))
+                    path.replace(path.size() - 4, 4, suffix);
+                else
+                    path += suffix;
+            }
+            std::ofstream shim{path};
+            shim << doc.render_shim(i);
+        }
+    }
+
   private:
-    /** The one driver pass both emission forms share: run welder's generic
-        driver over @a Ns with this text-emitting backend, so the artifacts
-        cover exactly what would be bound at runtime — classes, enums, free
-        functions, namespace variables and nested namespaces.
+    /** The one driver pass both single-shot emission forms share.
         @tparam Ns    a reflection of the (top-level) namespace / module.
         @tparam Style the C# name style.
         @param o the module knobs.
@@ -390,16 +460,10 @@ struct rod {
     static document generate_document(options o) {
         static_assert(std::meta::is_namespace(Ns),
                       "welder: csharp::generate<Ns>: Ns must reflect a namespace");
-        document doc{};
         if (o.cs_namespace.empty())
             o.cs_namespace = std::define_static_string(std::meta::identifier_of(Ns));
-        doc.opts = std::move(o);
-        doc.set_shard_count(doc.opts.shards);
-        // Every nested C++ namespace becomes a REAL nested C# namespace; each
-        // namespace's free functions / variables land in its `Global` static
-        // class (C# has no namespace-scope functions), its types beside it.
-        module_writer m{&doc, ""};
-        ::welder::welder<rod, Style>::template weld_namespace<Ns>(m);
+        document doc{begin_document(std::move(o))};
+        contribute_namespace<Ns, Style>(doc);
         return doc;
     }
 };

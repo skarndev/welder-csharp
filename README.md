@@ -63,6 +63,16 @@ release matrix generates on one platform and only compiles on the rest. Pass
 the same `SHARDS`/`CS_FILES` counts as the generating run; the sources' currency
 is the caller's responsibility.
 
+**Multi-TU generation** splits the *generator itself* when one TU cannot hold
+the whole surface: `rod::begin_document(options)` starts a document, any number
+of TUs contribute through `rod::at(doc, "Ns.Path")` + `weld_type` (or
+`rod::contribute_namespace<Ns>(doc)`), and `rod::render_files(doc, shim, cs)`
+renders once at the end. The document is runtime state — symbol registry and
+type-rename placeholders included — so cross-TU references resolve at render,
+peak compile memory is max(TU) rather than sum, and the TUs compile in
+parallel. The single-shot `generate_files` is these pieces composed, so its
+output is unchanged.
+
 `CS_FILES <N>` does the same to the managed side — `Bindings.0.cs …
 Bindings.N-1.cs` — but for a different reason. It buys **no** build time:
 Roslyn compiles one multi-megabyte file and many small ones in the same time
