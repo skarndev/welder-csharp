@@ -6,6 +6,8 @@
 #   [OUTPUT_DIR  <dir>]         # where shim.cpp + Bindings.cs land (default: binary dir)
 #   [SHARDS      <N>]           # split the shim into N parallel-compiling TUs
 #                               #   (shim.0.cpp … shim.N-1.cpp; default 1 = shim.cpp)
+#   [PREGENERATED_DIR <dir>]    # compile shim sources ALREADY generated elsewhere,
+#                               #   instead of building and running the generator
 #   [INCLUDE_DIRS <dir>...]     # extra include dirs (where the welded header lives)
 #   [LINK        <targets>...]  # extra link targets whose headers the shim/gen need
 #   [DEPENDS     <files>...])   # extra dependencies that retrigger generation
@@ -36,7 +38,7 @@
 # runtimes are linked statically so the dll loads under a native (non-MSYS)
 # dotnet without libstdc++-6.dll/libgcc on PATH.
 function(welder_csharp_generate_bindings name)
-  cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS;CS_FILES"
+  cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS;CS_FILES;PREGENERATED_DIR"
     "SOURCES;INCLUDE_DIRS;LINK;DEPENDS" ${ARGN})
   if(NOT CS_SOURCES)
     message(FATAL_ERROR "welder_csharp_generate_bindings(${name}): SOURCES is required")
@@ -91,6 +93,46 @@ function(welder_csharp_generate_bindings name)
     set(_cs_files ${_cs})
   endif()
 
+  # PREGENERATED_DIR: skip steps 1 and 2 entirely and compile shim sources that
+  # were generated elsewhere. The generator is ONE reflection-heavy TU — on a
+  # large surface it can dominate the whole build (measured on wowlib: 40
+  # minutes, serial, against ~8 minutes for the worst shim shard) — and its
+  # output is PLATFORM-INDEPENDENT text: same reflection, same header, same
+  # bytes. A cross-platform build can therefore generate once and compile the
+  # result everywhere, which is what this exists for. The caller is responsible
+  # for the sources being current; nothing here can check that, so treat the
+  # generating job as the source of truth and pass its artifacts along.
+  if(CS_PREGENERATED_DIR)
+    set(_shim_files "")
+    if(CS_SHARDS GREATER 1)
+      math(EXPR _last "${CS_SHARDS} - 1")
+      foreach(_i RANGE 0 ${_last})
+        list(APPEND _shim_files ${CS_PREGENERATED_DIR}/shim.${_i}.cpp)
+      endforeach()
+    else()
+      list(APPEND _shim_files ${CS_PREGENERATED_DIR}/shim.cpp)
+    endif()
+    set(_cs_files "")
+    if(CS_CS_FILES GREATER 1)
+      math(EXPR _cs_last "${CS_CS_FILES} - 1")
+      foreach(_i RANGE 0 ${_cs_last})
+        list(APPEND _cs_files ${CS_PREGENERATED_DIR}/Bindings.${_i}.cs)
+      endforeach()
+    else()
+      list(APPEND _cs_files ${CS_PREGENERATED_DIR}/Bindings.cs)
+    endif()
+    foreach(_f IN LISTS _shim_files)
+      if(NOT EXISTS ${_f})
+        message(FATAL_ERROR
+          "welder_csharp_generate_bindings(${name}): PREGENERATED_DIR is set but "
+          "${_f} does not exist. SHARDS/CS_FILES must match the run that "
+          "produced the sources.")
+      endif()
+    endforeach()
+    message(STATUS
+      "welder-csharp: ${name} compiles PRE-GENERATED sources from "
+      "${CS_PREGENERATED_DIR} (generator not built)")
+  else()
   # 1) the generator executable
   set(_gen ${name}_gen)
   add_executable(${_gen} ${CS_SOURCES})
@@ -112,6 +154,7 @@ function(welder_csharp_generate_bindings name)
     VERBATIM
     COMMENT "welder: generating C#/.NET bindings for ${name} \
 (${CS_SHARDS} shim TU(s), ${CS_CS_FILES} managed file(s))")
+  endif()
 
   # 3) the native shared library from the generated shim (NOT welder_warnings:
   # the generated file is machine-written; wire-width conversions are implicit

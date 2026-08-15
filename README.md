@@ -54,6 +54,15 @@ N > 1 the welded header is included by several TUs, so its namespace-scope
 function definitions must be `inline` (the ordinary header ODR rule; a
 single-TU shim silently tolerated violations).
 
+**Cross-platform builds: generate once.** The generator is a single
+reflection-heavy TU and can dominate everything else — on a large surface it
+runs to tens of minutes, serial, with nothing to overlap it — while its output
+is platform-independent text. `PREGENERATED_DIR <dir>` compiles shim sources
+produced by another job instead of building and running the generator, so a
+release matrix generates on one platform and only compiles on the rest. Pass
+the same `SHARDS`/`CS_FILES` counts as the generating run; the sources' currency
+is the caller's responsibility.
+
 `CS_FILES <N>` does the same to the managed side — `Bindings.0.cs …
 Bindings.N-1.cs` — but for a different reason. It buys **no** build time:
 Roslyn compiles one multi-megabyte file and many small ones in the same time
