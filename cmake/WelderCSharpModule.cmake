@@ -8,6 +8,9 @@
 #                               #   (shim.0.cpp … shim.N-1.cpp; default 1 = shim.cpp)
 #   [PREGENERATED_DIR <dir>]    # compile shim sources ALREADY generated elsewhere,
 #                               #   instead of building and running the generator
+#   [EXTRA_GEN_SOURCES <c.cpp>...] # additional TUs linked into the GENERATOR
+#                               #   executable (multi-TU generation: contributor
+#                               #   shards welding into the shared document)
 #   [INCLUDE_DIRS <dir>...]     # extra include dirs (where the welded header lives)
 #   [LINK        <targets>...]  # extra link targets whose headers the shim/gen need
 #   [DEPENDS     <files>...])   # extra dependencies that retrigger generation
@@ -39,7 +42,7 @@
 # dotnet without libstdc++-6.dll/libgcc on PATH.
 function(welder_csharp_generate_bindings name)
   cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS;CS_FILES;PREGENERATED_DIR"
-    "SOURCES;INCLUDE_DIRS;LINK;DEPENDS" ${ARGN})
+    "SOURCES;EXTRA_GEN_SOURCES;INCLUDE_DIRS;LINK;DEPENDS" ${ARGN})
   if(NOT CS_SOURCES)
     message(FATAL_ERROR "welder_csharp_generate_bindings(${name}): SOURCES is required")
   endif()
@@ -135,7 +138,7 @@ function(welder_csharp_generate_bindings name)
   else()
   # 1) the generator executable
   set(_gen ${name}_gen)
-  add_executable(${_gen} ${CS_SOURCES})
+  add_executable(${_gen} ${CS_SOURCES} ${CS_EXTRA_GEN_SOURCES})
   target_link_libraries(${_gen} PRIVATE welder::csharp ${CS_LINK})
   # welder's own build applies its strict warning set; a consumer using this
   # helper won't have the target, so the link is skipped for them.
