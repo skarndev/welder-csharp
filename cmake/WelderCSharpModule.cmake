@@ -43,6 +43,18 @@
 function(welder_csharp_generate_bindings name)
   cmake_parse_arguments(CS "" "LIBRARY;OUTPUT_DIR;SHARDS;CS_FILES;PREGENERATED_DIR"
     "SOURCES;EXTRA_GEN_SOURCES;INCLUDE_DIRS;LINK;DEPENDS" ${ARGN})
+  # An unknown keyword is never harmless here: a caller passing an option this
+  # version does not know (say, PREGENERATED_DIR to a pre-e9f0686 pin) would
+  # silently get the OPPOSITE behaviour — the generator building and running on
+  # a machine the caller meant to spare. That exact mismatch cost a release
+  # 5 hours of a 7 GB runner swapping through the generator TU it thought it
+  # had skipped. Fail loudly instead.
+  if(CS_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR
+      "welder_csharp_generate_bindings(${name}): unknown arguments "
+      "'${CS_UNPARSED_ARGUMENTS}' — keyword/module version mismatch? Check the "
+      "welder-csharp pin against the options this call site uses.")
+  endif()
   if(NOT CS_SOURCES)
     message(FATAL_ERROR "welder_csharp_generate_bindings(${name}): SOURCES is required")
   endif()
@@ -203,6 +215,11 @@ endfunction()
 # built shim; `dotnet pack` must run AFTER the native target is built.
 function(welder_csharp_nuget_project name)
   cmake_parse_arguments(NG "" "PACKAGE_ID;VERSION;TFM;OUTPUT_DIR" "" ${ARGN})
+  if(NG_UNPARSED_ARGUMENTS)  # same version-mismatch trap as the generator above
+    message(FATAL_ERROR
+      "welder_csharp_nuget_project(${name}): unknown arguments "
+      "'${NG_UNPARSED_ARGUMENTS}' — keyword/module version mismatch?")
+  endif()
   if(NOT NG_PACKAGE_ID)
     message(FATAL_ERROR "welder_csharp_nuget_project(${name}): PACKAGE_ID is required")
   endif()
