@@ -388,6 +388,24 @@ void* upcast(void* self) noexcept {
     return static_cast<[:To:]*>(static_cast<[:From:]*>(self));
 }
 
+/** The byte offset of the @a i-th nonstatic data member of @a W — the
+    shim-side half of the ERASED-FIELD layout contract. The generator baked
+    the offset it computed (on ITS platform) into the managed property bodies
+    as a plain integer; the generated shim `static_assert`s that number
+    against this re-derivation on every platform it compiles on, so an ABI
+    whose layout disagrees fails the build instead of reading the wrong bytes
+    at runtime.
+    @tparam W a reflection of the welded class.
+    @param i the member's index among ALL nonstatic data members (unchecked
+             access context — the same enumeration the generator indexed).
+    @return the member's byte offset within @a W. */
+template <std::meta::info W>
+consteval std::size_t nsdm_offset(std::size_t i) {
+    return std::meta::offset_of(std::meta::nonstatic_data_members_of(
+               W, std::meta::access_context::unchecked())[i])
+        .bytes;
+}
+
 /** A namespace-variable getter thunk body.
     @tparam Var a reflection of the variable.
     @param err the error slot.

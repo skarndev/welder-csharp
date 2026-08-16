@@ -118,11 +118,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Point_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Point_new_1(int a0, int a1, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Point_clone(PointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Point_get_x(PointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Point_set_x(PointHandle self, int v, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Point_get_y(PointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Point_set_y(PointHandle self, int v, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Point_get_stamp(PointHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Point_m_sum_0(PointHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Point_m_offset_0(PointHandle self, int a0, int a1, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Point_m_offset_1(PointHandle self, int a0, out WelderError err);
@@ -139,10 +134,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Size_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Size_new_agg(int a0, int a1, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Size_clone(SizeHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Size_get_width(SizeHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Size_set_width(SizeHandle self, int v, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Size_get_height(SizeHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Size_set_height(SizeHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Holder_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Holder_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Holder_clone(HolderHandle self, out WelderError err);
@@ -159,9 +150,7 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Segment_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Segment_new_1(PointHandle a0, PointHandle a1, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Segment_clone(SegmentHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Segment_get_start(SegmentHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Segment_set_start(SegmentHandle self, PointHandle v, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Segment_get_end(SegmentHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Segment_set_end(SegmentHandle self, PointHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Segment_m_span_0(SegmentHandle self, out WelderError err);
         [LibraryImport(Lib)] [return: MarshalAs(UnmanagedType.U1)] internal static partial bool welder_csharp_cases_Segment_m_degenerate_0(SegmentHandle self, out WelderError err);
@@ -173,14 +162,10 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Animal_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Animal_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Animal_clone(AnimalHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Animal_get_age(AnimalHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Animal_set_age(AnimalHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Animal_m_kind_0(AnimalHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Legged_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Legged_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Legged_clone(LeggedHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Legged_get_legs(LeggedHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Legged_set_legs(LeggedHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Dog_as_csharp_cases_Animal(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Dog_as_csharp_cases_Legged(IntPtr self);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Dog_destroy(IntPtr self);
@@ -198,13 +183,11 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial long welder_vecs_int_size(VectorIntHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vecs_int_push(VectorIntHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vecs_int_clear(VectorIntHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Basket_get_nums(BasketHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Basket_set_nums(BasketHandle self, VectorIntHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_arrs_double_3_new(out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_arrs_double_3_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_arrs_double_3_data(ArrayDoublex3Handle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_arrs_double_3_fill(ArrayDoublex3Handle self, IntPtr data, long len, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Basket_get_bounds(BasketHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Basket_set_bounds(BasketHandle self, ArrayDoublex3Handle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_vecs_csharp_cases_Level_new(out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vecs_csharp_cases_Level_destroy(IntPtr self);
@@ -213,7 +196,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial long welder_vecs_csharp_cases_Level_size(VectorLevelHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vecs_csharp_cases_Level_push(VectorLevelHandle self, byte v, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vecs_csharp_cases_Level_clear(VectorLevelHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Basket_get_levels(BasketHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Basket_set_levels(BasketHandle self, VectorLevelHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial WelderOptWire welder_csharp_cases_Basket_get_label(BasketHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Basket_set_label(BasketHandle self, WelderOptWire v, out WelderError err);
@@ -234,7 +216,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_Point_set(VectorPointHandle self, long i, PointHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_Point_add(VectorPointHandle self, PointHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_Point_clear(VectorPointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Route_get_stops(RouteHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Route_set_stops(RouteHandle self, VectorPointHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Route_m_stop_count_0(RouteHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Route_m_reversed_0(RouteHandle self, out WelderError err);
@@ -250,7 +231,6 @@ namespace csharp_cases
         [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] internal static partial void welder_map_str_csharp_cases_Point_set(MapStrPointHandle self, string k, PointHandle v, out WelderError err);
         [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] [return: MarshalAs(UnmanagedType.U1)] internal static partial bool welder_map_str_csharp_cases_Point_remove(MapStrPointHandle self, string k, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_map_str_csharp_cases_Point_clear(MapStrPointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Depot_get_sites(DepotHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Depot_set_sites(DepotHandle self, MapStrPointHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_umap_int_str_new(out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_umap_int_str_destroy(IntPtr self);
@@ -260,7 +240,6 @@ namespace csharp_cases
         [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] internal static partial void welder_umap_int_str_set(UMapIntStrHandle self, int k, string v, out WelderError err);
         [LibraryImport(Lib)] [return: MarshalAs(UnmanagedType.U1)] internal static partial bool welder_umap_int_str_remove(UMapIntStrHandle self, int k, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_umap_int_str_clear(UMapIntStrHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Depot_get_labels(DepotHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Depot_set_labels(DepotHandle self, UMapIntStrHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Depot_m_site_count_0(DepotHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial long welder_csharp_cases_Depot_m_label_keys_0(DepotHandle self, UMapIntStrHandle a0, out WelderError err);
@@ -271,7 +250,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_arr2_csharp_cases_Point_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_arr2_csharp_cases_Point_get(ArrayPointx2Handle self, long i, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_arr2_csharp_cases_Point_set(ArrayPointx2Handle self, long i, PointHandle elem, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Cable_get_ends(CableHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Cable_set_ends(CableHandle self, ArrayPointx2Handle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Cable_m_span_x_0(CableHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_sp_csharp_cases_Point_free(IntPtr box);
@@ -295,13 +273,8 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_Gauge_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_Gauge_new_1(int a0, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_Gauge_clone(Machine.GaugeHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Machine_Gauge_get_value(Machine.GaugeHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Machine_Gauge_set_value(Machine.GaugeHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_clone(MachineHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial Machine.State welder_csharp_cases_Machine_get_power(MachineHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Machine_set_power(MachineHandle self, Machine.State v, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_get_dial(MachineHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Machine_set_dial(MachineHandle self, Machine.GaugeHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Machine_m_turn_on_0(MachineHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Machine_m_peak_0(MachineHandle self, out WelderError err);
@@ -322,7 +295,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_unsigned_char_set(VectorVectorByteHandle self, long i, VectorByteHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_unsigned_char_add(VectorVectorByteHandle self, VectorByteHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_unsigned_char_clear(VectorVectorByteHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Terrain_get_layers(TerrainHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Terrain_set_layers(TerrainHandle self, VectorVectorByteHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_arrs_byte_4_new(out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_arrs_byte_4_destroy(IntPtr self);
@@ -335,7 +307,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_vec_std_array_unsigned_char_4_set(VectorArrayBytex4Handle self, long i, ArrayBytex4Handle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_array_unsigned_char_4_add(VectorArrayBytex4Handle self, ArrayBytex4Handle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_array_unsigned_char_4_clear(VectorArrayBytex4Handle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Terrain_get_bones(TerrainHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Terrain_set_bones(TerrainHandle self, VectorArrayBytex4Handle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_vec_std_vector_csharp_cases_Point_new(out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_csharp_cases_Point_destroy(IntPtr self);
@@ -344,7 +315,6 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_csharp_cases_Point_set(VectorVectorPointHandle self, long i, VectorPointHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_csharp_cases_Point_add(VectorVectorPointHandle self, VectorPointHandle elem, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_vec_std_vector_csharp_cases_Point_clear(VectorVectorPointHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Terrain_get_clusters(TerrainHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Terrain_set_clusters(TerrainHandle self, VectorVectorPointHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Terrain_m_weight_0(TerrainHandle self, int a0, int a1, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_Terrain_m_bone_0(TerrainHandle self, int a0, int a1, out WelderError err);
@@ -363,12 +333,35 @@ namespace csharp_cases
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_WoodCrate_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_WoodCrate_clone(WoodCrateHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_WoodCrate_m_weigh_0_at_csharp_cases_CrateBase_csharp_cases_Wood(WoodCrateHandle self, int a0, out WelderError err);
-        [LibraryImport(Lib)] internal static partial int welder_csharp_cases_WoodCrate_get_stamped(WoodCrateHandle self, out WelderError err);
-        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_WoodCrate_set_stamped(WoodCrateHandle self, int v, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_WoodCrate_m_weigh_0(WoodCrateHandle self, out WelderError err);
         [LibraryImport(Lib)] internal static partial int welder_csharp_cases_inner_f_twice_0(int a0, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_free(IntPtr p);
         [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] internal static partial IntPtr welder_dup_utf8(string s);
+        [LibraryImport(Lib)] internal static partial sbyte welder__field_get_sbyte(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_sbyte(SafeHandle self, int off, sbyte v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial byte welder__field_get_byte(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_byte(SafeHandle self, int off, byte v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial short welder__field_get_short(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_short(SafeHandle self, int off, short v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial ushort welder__field_get_ushort(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_ushort(SafeHandle self, int off, ushort v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial int welder__field_get_int(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_int(SafeHandle self, int off, int v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial uint welder__field_get_uint(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_uint(SafeHandle self, int off, uint v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial long welder__field_get_long(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_long(SafeHandle self, int off, long v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial ulong welder__field_get_ulong(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_ulong(SafeHandle self, int off, ulong v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial float welder__field_get_float(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_float(SafeHandle self, int off, float v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial double welder__field_get_double(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_double(SafeHandle self, int off, double v, out WelderError err);
+        [LibraryImport(Lib)] [return: MarshalAs(UnmanagedType.U1)] internal static partial bool welder__field_get_bool(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder__field_set_bool(SafeHandle self, int off, [MarshalAs(UnmanagedType.U1)] bool v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder__field_addr(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder__field_get_str(SafeHandle self, int off, out WelderError err);
+        [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] internal static partial void welder__field_set_str(SafeHandle self, int off, string v, out WelderError err);
     }
 
     /// <summary>Primary display colors.</summary>
@@ -435,13 +428,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Point_get_x(_h_Point, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Point, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Point_set_x(_h_Point, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Point, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -450,13 +443,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Point_get_y(_h_Point, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Point, 4, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Point_set_y(_h_Point, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Point, 4, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -465,7 +458,7 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Point_get_stamp(_h_Point, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Point, 8, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
@@ -614,13 +607,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Size_get_width(_h_Size, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Size, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Size_set_width(_h_Size, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Size, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -629,13 +622,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Size_get_height(_h_Size, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Size, 4, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Size_set_height(_h_Size, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Size, 4, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -764,7 +757,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Segment_get_start(_h_Segment, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Segment, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new Point(_r, false);
                 _v._owner = this;
@@ -781,7 +774,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Segment_get_end(_h_Segment, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Segment, 16, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new Point(_r, false);
                 _v._owner = this;
@@ -852,13 +845,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Animal_get_age(_h_Animal, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Animal, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Animal_set_age(_h_Animal, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Animal, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -915,13 +908,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Legged_get_legs(_h_Legged, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Legged, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Legged_set_legs(_h_Legged, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Legged, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -1026,7 +1019,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Basket_get_nums(_h_Basket, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Basket, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorInt(_r, false);
                 _v._owner = this;
@@ -1043,7 +1036,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Basket_get_bounds(_h_Basket, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Basket, 24, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new ArrayDoublex3(_r, false);
                 _v._owner = this;
@@ -1060,7 +1053,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Basket_get_levels(_h_Basket, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Basket, 48, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorLevel(_r, false);
                 _v._owner = this;
@@ -1180,7 +1173,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Route_get_stops(_h_Route, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Route, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorPoint(_r, false);
                 _v._owner = this;
@@ -1258,7 +1251,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Depot_get_sites(_h_Depot, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Depot, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new MapStrPoint(_r, false);
                 _v._owner = this;
@@ -1275,7 +1268,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Depot_get_labels(_h_Depot, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Depot, 48, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new UMapIntStr(_r, false);
                 _v._owner = this;
@@ -1346,7 +1339,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Cable_get_ends(_h_Cable, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Cable, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new ArrayPointx2(_r, false);
                 _v._owner = this;
@@ -1592,13 +1585,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Machine_Gauge_get_value(_h_Machine_Gauge, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_Machine_Gauge, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Machine_Gauge_set_value(_h_Machine_Gauge, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_Machine_Gauge, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -1626,13 +1619,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_Machine_get_power(_h_Machine, out WelderError _e);
+                var _r = (Machine.State)NativeMethods.welder__field_get_byte(_h_Machine, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_Machine_set_power(_h_Machine, @value, out WelderError _e);
+                NativeMethods.welder__field_set_byte(_h_Machine, 0, (byte)value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }
@@ -1641,7 +1634,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Machine_get_dial(_h_Machine, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Machine, 4, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new Machine.Gauge(_r, false);
                 _v._owner = this;
@@ -1711,7 +1704,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Terrain_get_layers(_h_Terrain, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Terrain, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorVectorByte(_r, false);
                 _v._owner = this;
@@ -1728,7 +1721,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Terrain_get_bones(_h_Terrain, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Terrain, 24, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorArrayBytex4(_r, false);
                 _v._owner = this;
@@ -1745,7 +1738,7 @@ namespace csharp_cases
         {
             get
             {
-                IntPtr _r = NativeMethods.welder_csharp_cases_Terrain_get_clusters(_h_Terrain, out WelderError _e);
+                IntPtr _r = NativeMethods.welder__field_addr(_h_Terrain, 48, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 var _v = new VectorVectorPoint(_r, false);
                 _v._owner = this;
@@ -1938,13 +1931,13 @@ namespace csharp_cases
         {
             get
             {
-                var _r = NativeMethods.welder_csharp_cases_WoodCrate_get_stamped(_h_WoodCrate, out WelderError _e);
+                var _r = NativeMethods.welder__field_get_int(_h_WoodCrate, 0, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
                 return _r;
             }
             set
             {
-                NativeMethods.welder_csharp_cases_WoodCrate_set_stamped(_h_WoodCrate, @value, out WelderError _e);
+                NativeMethods.welder__field_set_int(_h_WoodCrate, 0, value, out WelderError _e);
                 WelderInterop.ThrowIfError(in _e);
             }
         }

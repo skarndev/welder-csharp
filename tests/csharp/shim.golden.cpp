@@ -52,15 +52,11 @@ void* welder_csharp_cases_Point_new_1(std::int32_t a0, std::int32_t a1, welder_e
 
 void* welder_csharp_cases_Point_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Point>(self, err); }
 
-std::int32_t welder_csharp_cases_Point_get_x(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Point, wcs::named_field(^^::csharp_cases::Point, "x")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Point>(0) == 0, "welder: erased-field offset drift: x");
 
-void welder_csharp_cases_Point_set_x(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Point, wcs::named_field(^^::csharp_cases::Point, "x")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Point>(1) == 4, "welder: erased-field offset drift: y");
 
-std::int32_t welder_csharp_cases_Point_get_y(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Point, wcs::named_field(^^::csharp_cases::Point, "y")>(self, err); }
-
-void welder_csharp_cases_Point_set_y(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Point, wcs::named_field(^^::csharp_cases::Point, "y")>(self, err, v); }
-
-std::int32_t welder_csharp_cases_Point_get_stamp(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Point, wcs::named_field(^^::csharp_cases::Point, "stamp")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Point>(2) == 8, "welder: erased-field offset drift: stamp");
 
 std::int32_t welder_csharp_cases_Point_m_sum_0(void* self, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Point, wcs::named_member(^^::csharp_cases::Point, "sum", 0)>(self, err); }
 
@@ -94,13 +90,9 @@ void* welder_csharp_cases_Size_new_agg(std::int32_t a0, std::int32_t a1, welder_
 
 void* welder_csharp_cases_Size_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Size>(self, err); }
 
-std::int32_t welder_csharp_cases_Size_get_width(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Size, wcs::named_field(^^::csharp_cases::Size, "width")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Size>(0) == 0, "welder: erased-field offset drift: width");
 
-void welder_csharp_cases_Size_set_width(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Size, wcs::named_field(^^::csharp_cases::Size, "width")>(self, err, v); }
-
-std::int32_t welder_csharp_cases_Size_get_height(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Size, wcs::named_field(^^::csharp_cases::Size, "height")>(self, err); }
-
-void welder_csharp_cases_Size_set_height(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Size, wcs::named_field(^^::csharp_cases::Size, "height")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Size>(1) == 4, "welder: erased-field offset drift: height");
 
 void welder_csharp_cases_Holder_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Holder>(self); }
 
@@ -134,11 +126,11 @@ void* welder_csharp_cases_Segment_new_1(void* a0, void* a1, welder_error* err) {
 
 void* welder_csharp_cases_Segment_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Segment>(self, err); }
 
-void* welder_csharp_cases_Segment_get_start(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Segment, wcs::named_field(^^::csharp_cases::Segment, "start")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Segment>(0) == 0, "welder: erased-field offset drift: start");
 
 void welder_csharp_cases_Segment_set_start(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Segment, wcs::named_field(^^::csharp_cases::Segment, "start")>(self, err, v); }
 
-void* welder_csharp_cases_Segment_get_end(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Segment, wcs::named_field(^^::csharp_cases::Segment, "end")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Segment>(1) == 16, "welder: erased-field offset drift: end");
 
 void welder_csharp_cases_Segment_set_end(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Segment, wcs::named_field(^^::csharp_cases::Segment, "end")>(self, err, v); }
 
@@ -162,9 +154,7 @@ void* welder_csharp_cases_Animal_new_default(welder_error* err) { return wcs::sh
 
 void* welder_csharp_cases_Animal_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Animal>(self, err); }
 
-std::int32_t welder_csharp_cases_Animal_get_age(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Animal, wcs::named_field(^^::csharp_cases::Animal, "age")>(self, err); }
-
-void welder_csharp_cases_Animal_set_age(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Animal, wcs::named_field(^^::csharp_cases::Animal, "age")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Animal>(0) == 0, "welder: erased-field offset drift: age");
 
 const char* welder_csharp_cases_Animal_m_kind_0(void* self, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Animal, wcs::named_member(^^::csharp_cases::Animal, "kind", 0)>(self, err); }
 
@@ -174,9 +164,7 @@ void* welder_csharp_cases_Legged_new_default(welder_error* err) { return wcs::sh
 
 void* welder_csharp_cases_Legged_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Legged>(self, err); }
 
-std::int32_t welder_csharp_cases_Legged_get_legs(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Legged, wcs::named_field(^^::csharp_cases::Legged, "legs")>(self, err); }
-
-void welder_csharp_cases_Legged_set_legs(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Legged, wcs::named_field(^^::csharp_cases::Legged, "legs")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Legged>(0) == 0, "welder: erased-field offset drift: legs");
 
 void* welder_csharp_cases_Dog_as_csharp_cases_Animal(void* self) { return wcs::shim::upcast<^^::csharp_cases::Dog, ^^::csharp_cases::Animal>(self); }
 
@@ -212,7 +200,7 @@ void welder_vecs_int_push(void* self, std::int32_t v, welder_error* err) { wcs::
 
 void welder_vecs_int_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^int>(self, err); }
 
-void* welder_csharp_cases_Basket_get_nums(void* self, welder_error* err) { return wcs::shim::field_addr<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "nums")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Basket>(0) == 0, "welder: erased-field offset drift: nums");
 
 void welder_csharp_cases_Basket_set_nums(void* self, void* v, welder_error* err) { wcs::shim::field_assign<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "nums")>(self, v, err); }
 
@@ -224,7 +212,7 @@ void* welder_arrs_double_3_data(void* self, welder_error* err) { return wcs::shi
 
 void welder_arrs_double_3_fill(void* self, const void* data, std::int64_t len, welder_error* err) { wcs::shim::arr_fill<^^double, 3>(self, data, len, err); }
 
-void* welder_csharp_cases_Basket_get_bounds(void* self, welder_error* err) { return wcs::shim::field_addr<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "bounds")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Basket>(1) == 24, "welder: erased-field offset drift: bounds");
 
 void welder_csharp_cases_Basket_set_bounds(void* self, void* v, welder_error* err) { wcs::shim::field_assign<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "bounds")>(self, v, err); }
 
@@ -242,7 +230,7 @@ void welder_vecs_csharp_cases_Level_push(void* self, std::uint8_t v, welder_erro
 
 void welder_vecs_csharp_cases_Level_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::csharp_cases::Level>(self, err); }
 
-void* welder_csharp_cases_Basket_get_levels(void* self, welder_error* err) { return wcs::shim::field_addr<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "levels")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Basket>(2) == 48, "welder: erased-field offset drift: levels");
 
 void welder_csharp_cases_Basket_set_levels(void* self, void* v, welder_error* err) { wcs::shim::field_assign<^^::csharp_cases::Basket, wcs::named_field(^^::csharp_cases::Basket, "levels")>(self, v, err); }
 
@@ -284,7 +272,7 @@ void welder_vec_csharp_cases_Point_add(void* self, void* elem, welder_error* err
 
 void welder_vec_csharp_cases_Point_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::csharp_cases::Point>(self, err); }
 
-void* welder_csharp_cases_Route_get_stops(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Route, wcs::named_field(^^::csharp_cases::Route, "stops")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Route>(0) == 0, "welder: erased-field offset drift: stops");
 
 void welder_csharp_cases_Route_set_stops(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Route, wcs::named_field(^^::csharp_cases::Route, "stops")>(self, err, v); }
 
@@ -316,7 +304,7 @@ bool welder_map_str_csharp_cases_Point_remove(void* self, const char* k, welder_
 
 void welder_map_str_csharp_cases_Point_clear(void* self, welder_error* err) { wcs::shim::map_clear<true, ^^std::string, ^^::csharp_cases::Point>(self, err); }
 
-void* welder_csharp_cases_Depot_get_sites(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Depot, wcs::named_field(^^::csharp_cases::Depot, "sites")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Depot>(0) == 0, "welder: erased-field offset drift: sites");
 
 void welder_csharp_cases_Depot_set_sites(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Depot, wcs::named_field(^^::csharp_cases::Depot, "sites")>(self, err, v); }
 
@@ -336,7 +324,7 @@ bool welder_umap_int_str_remove(void* self, std::int32_t k, welder_error* err) {
 
 void welder_umap_int_str_clear(void* self, welder_error* err) { wcs::shim::map_clear<false, ^^int, ^^std::string>(self, err); }
 
-void* welder_csharp_cases_Depot_get_labels(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Depot, wcs::named_field(^^::csharp_cases::Depot, "labels")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Depot>(1) == 48, "welder: erased-field offset drift: labels");
 
 void welder_csharp_cases_Depot_set_labels(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Depot, wcs::named_field(^^::csharp_cases::Depot, "labels")>(self, err, v); }
 
@@ -358,7 +346,7 @@ void* welder_arr2_csharp_cases_Point_get(void* self, std::int64_t i, welder_erro
 
 void welder_arr2_csharp_cases_Point_set(void* self, std::int64_t i, void* elem, welder_error* err) { wcs::shim::arr_set<^^::csharp_cases::Point, 2>(self, i, elem, err); }
 
-void* welder_csharp_cases_Cable_get_ends(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Cable, wcs::named_field(^^::csharp_cases::Cable, "ends")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Cable>(0) == 0, "welder: erased-field offset drift: ends");
 
 void welder_csharp_cases_Cable_set_ends(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Cable, wcs::named_field(^^::csharp_cases::Cable, "ends")>(self, err, v); }
 
@@ -418,19 +406,15 @@ void* welder_csharp_cases_Machine_Gauge_new_1(std::int32_t a0, welder_error* err
 
 void* welder_csharp_cases_Machine_Gauge_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Machine::Gauge>(self, err); }
 
-std::int32_t welder_csharp_cases_Machine_Gauge_get_value(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Machine::Gauge, wcs::named_field(^^::csharp_cases::Machine::Gauge, "value")>(self, err); }
-
-void welder_csharp_cases_Machine_Gauge_set_value(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Machine::Gauge, wcs::named_field(^^::csharp_cases::Machine::Gauge, "value")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Machine::Gauge>(0) == 0, "welder: erased-field offset drift: value");
 
 void* welder_csharp_cases_Machine_new_default(welder_error* err) { return wcs::shim::default_construct<^^::csharp_cases::Machine>(err); }
 
 void* welder_csharp_cases_Machine_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::Machine>(self, err); }
 
-std::uint8_t welder_csharp_cases_Machine_get_power(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Machine, wcs::named_field(^^::csharp_cases::Machine, "power")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Machine>(0) == 0, "welder: erased-field offset drift: power");
 
-void welder_csharp_cases_Machine_set_power(void* self, std::uint8_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Machine, wcs::named_field(^^::csharp_cases::Machine, "power")>(self, err, v); }
-
-void* welder_csharp_cases_Machine_get_dial(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Machine, wcs::named_field(^^::csharp_cases::Machine, "dial")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Machine>(1) == 4, "welder: erased-field offset drift: dial");
 
 void welder_csharp_cases_Machine_set_dial(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Machine, wcs::named_field(^^::csharp_cases::Machine, "dial")>(self, err, v); }
 
@@ -472,7 +456,7 @@ void welder_vec_std_vector_unsigned_char_add(void* self, void* elem, welder_erro
 
 void welder_vec_std_vector_unsigned_char_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::std::vector<unsigned char>>(self, err); }
 
-void* welder_csharp_cases_Terrain_get_layers(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "layers")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Terrain>(0) == 0, "welder: erased-field offset drift: layers");
 
 void welder_csharp_cases_Terrain_set_layers(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "layers")>(self, err, v); }
 
@@ -498,7 +482,7 @@ void welder_vec_std_array_unsigned_char_4_add(void* self, void* elem, welder_err
 
 void welder_vec_std_array_unsigned_char_4_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::std::array<unsigned char, 4>>(self, err); }
 
-void* welder_csharp_cases_Terrain_get_bones(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "bones")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Terrain>(1) == 24, "welder: erased-field offset drift: bones");
 
 void welder_csharp_cases_Terrain_set_bones(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "bones")>(self, err, v); }
 
@@ -516,7 +500,7 @@ void welder_vec_std_vector_csharp_cases_Point_add(void* self, void* elem, welder
 
 void welder_vec_std_vector_csharp_cases_Point_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::std::vector<::csharp_cases::Point>>(self, err); }
 
-void* welder_csharp_cases_Terrain_get_clusters(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "clusters")>(self, err); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Terrain>(2) == 48, "welder: erased-field offset drift: clusters");
 
 void welder_csharp_cases_Terrain_set_clusters(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::Terrain, wcs::named_field(^^::csharp_cases::Terrain, "clusters")>(self, err, v); }
 
@@ -554,9 +538,7 @@ void* welder_csharp_cases_WoodCrate_clone(void* self, welder_error* err) { retur
 
 std::int32_t welder_csharp_cases_WoodCrate_m_weigh_0_at_csharp_cases_CrateBase_csharp_cases_Wood(void* self, std::int32_t a0, welder_error* err) { return wcs::shim::method<^^::csharp_cases::WoodCrate, wcs::named_member(wcs::base_scope(^^::csharp_cases::WoodCrate, "csharp_cases_CrateBase_csharp_cases_Wood"), "weigh", 0)>(self, err, a0); }
 
-std::int32_t welder_csharp_cases_WoodCrate_get_stamped(void* self, welder_error* err) { return wcs::shim::field_get<^^::csharp_cases::WoodCrate, wcs::named_field(^^::csharp_cases::WoodCrate, "stamped")>(self, err); }
-
-void welder_csharp_cases_WoodCrate_set_stamped(void* self, std::int32_t v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::WoodCrate, wcs::named_field(^^::csharp_cases::WoodCrate, "stamped")>(self, err, v); }
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::WoodCrate>(0) == 0, "welder: erased-field offset drift: stamped");
 
 std::int32_t welder_csharp_cases_WoodCrate_m_weigh_0(void* self, welder_error* err) { return wcs::shim::method<^^::csharp_cases::WoodCrate, wcs::named_member(^^::csharp_cases::WoodCrate, "weigh", 0)>(self, err); }
 
@@ -565,5 +547,36 @@ std::int32_t welder_csharp_cases_inner_f_twice_0(std::int32_t a0, welder_error* 
 void welder_free(void* p) { std::free(p); }
 
 const char* welder_dup_utf8(const char* s) { return wcs::shim::dup(s ? s : ""); }
+
+// The ERASED-FIELD entry points: shared by every erased data-member property.
+// The offsets arrive from the managed side (generator-computed); the per-member
+// static_asserts in the shim shards verify them on this platform's ABI.
+static void welder__field_ok(welder_error* e) { e->code = 0; e->message = nullptr; }
+
+std::int8_t welder__field_get_sbyte(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::int8_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_sbyte(void* self, std::int32_t off, std::int8_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::int8_t*>(static_cast<char*>(self) + off) = v; }
+std::uint8_t welder__field_get_byte(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::uint8_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_byte(void* self, std::int32_t off, std::uint8_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::uint8_t*>(static_cast<char*>(self) + off) = v; }
+std::int16_t welder__field_get_short(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::int16_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_short(void* self, std::int32_t off, std::int16_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::int16_t*>(static_cast<char*>(self) + off) = v; }
+std::uint16_t welder__field_get_ushort(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::uint16_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_ushort(void* self, std::int32_t off, std::uint16_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::uint16_t*>(static_cast<char*>(self) + off) = v; }
+std::int32_t welder__field_get_int(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::int32_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_int(void* self, std::int32_t off, std::int32_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::int32_t*>(static_cast<char*>(self) + off) = v; }
+std::uint32_t welder__field_get_uint(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::uint32_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_uint(void* self, std::int32_t off, std::uint32_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::uint32_t*>(static_cast<char*>(self) + off) = v; }
+std::int64_t welder__field_get_long(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::int64_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_long(void* self, std::int32_t off, std::int64_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::int64_t*>(static_cast<char*>(self) + off) = v; }
+std::uint64_t welder__field_get_ulong(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const std::uint64_t*>(static_cast<const char*>(self) + off); }
+void welder__field_set_ulong(void* self, std::int32_t off, std::uint64_t v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<std::uint64_t*>(static_cast<char*>(self) + off) = v; }
+float welder__field_get_float(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const float*>(static_cast<const char*>(self) + off); }
+void welder__field_set_float(void* self, std::int32_t off, float v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<float*>(static_cast<char*>(self) + off) = v; }
+double welder__field_get_double(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const double*>(static_cast<const char*>(self) + off); }
+void welder__field_set_double(void* self, std::int32_t off, double v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<double*>(static_cast<char*>(self) + off) = v; }
+bool welder__field_get_bool(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return *reinterpret_cast<const bool*>(static_cast<const char*>(self) + off); }
+void welder__field_set_bool(void* self, std::int32_t off, bool v, welder_error* err) { welder__field_ok(err); *reinterpret_cast<bool*>(static_cast<char*>(self) + off) = v; }
+void* welder__field_addr(void* self, std::int32_t off, welder_error* err) { welder__field_ok(err); return static_cast<char*>(self) + off; }
+const char* welder__field_get_str(void* self, std::int32_t off, welder_error* err) { return wcs::shim::caught<const char*>(err, [&]() -> const char* { return wcs::shim::dup(reinterpret_cast<const ::std::string*>(static_cast<const char*>(self) + off)->c_str()); }); }
+void welder__field_set_str(void* self, std::int32_t off, const char* v, welder_error* err) { wcs::shim::caught<int>(err, [&]() -> int { *reinterpret_cast<::std::string*>(static_cast<char*>(self) + off) = v ? v : ""; return 0; }); }
 
 } // extern "C"

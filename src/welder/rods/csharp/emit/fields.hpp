@@ -7,6 +7,7 @@
 #include <welder/rods/csharp/lang.hpp>
 #include <welder/rods/csharp/document.hpp>
 #include <welder/rods/csharp/emit/containers.hpp>
+#include <welder/rods/csharp/emit/erased.hpp>
 #include <welder/rods/csharp/emit/params.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/returns.hpp>
@@ -78,11 +79,22 @@ class field_emitter {
         const member_scope ms{member_scope_of<Mem>(_writer.cpp_qualified,
                                                    _writer.cpp_anchor,
                                                    _writer.type_token)};
+        // The ERASED path: an eligible member of the bound type itself binds
+        // through the document's shared entry points — no per-member thunk,
+        // no per-member P/Invoke; just a property body carrying the offset
+        // and a shim-side static_assert holding the layout contract. A
+        // member flattened in from a base keeps the bespoke path (its offset
+        // includes a base subobject this layer does not compute).
+        if constexpr (erased_field_way(Mem) != erased_way::none) {
+            if (_writer.doc->opts.erased_fields && ms.suffix.empty()) {
+                emit_erased_field<Mem, Style>(ms);
+                return;
+            }
+        }
         const std::string lookup{"wcs::named_field(" + ms.owner + ", \"" + id +
                                  "\")"};
         constexpr bool read_only{std::meta::is_const_type(MT) ||
                                  ::welder::member_no_reassign(Mem, cs)};
-        constexpr bool is_str{classify(MT) == marshal_kind::utf8_string};
         constexpr bool is_bool{classify(MT) == marshal_kind::boolean};
 
         // getter thunk + P/Invoke
@@ -99,23 +111,8 @@ class field_emitter {
             is_bool ? "[return: MarshalAs(UnmanagedType.U1)] " : "",
             pinvoke_type<MT, Style>(true), get.name(), _writer.handle_cs);
         std::string setsym{};
-        if constexpr (!read_only) {
-            const bound_symbol set{*_writer.doc,
-                                   _writer.sym_prefix + "_set_" + id + ms.suffix,
-                                   _writer.members, 2};
-            setsym = set.name();
-            code_writer st{set.thunk()};
-            st.line("void {}(void* self, {} v, welder_error* err) { return "
-                    "wcs::shim::field_set<{}, {}>(self, err, v); }",
-                    set.name(), wire_param_v<MT>, _writer.cpp_anchor, lookup);
-            st.blank();
-            set.pinvoke().line(
-                "{} internal static partial void {}({} self, {}{} v, out "
-                "WelderError err);",
-                import_attr(is_str), set.name(), _writer.handle_cs,
-                is_bool ? "[MarshalAs(UnmanagedType.U1)] " : "",
-                pinvoke_type<MT, Style>(false));
-        }
+        if constexpr (!read_only)
+            setsym = emit_field_set_thunk<Mem, Style>(ms, id);
 
         // property (the setter's value conversion reuses the parameter
         // machinery — one conversion source for params, setters, operands)
@@ -217,6 +214,143 @@ class field_emitter {
     }
 
   private:
+    /** The bespoke per-member setter (thunk + P/Invoke): the member's own
+        `operator=` spliced through `field_set`. Shared by the bespoke path
+        and by the erased path's handle-like members, whose GETTER erases to
+        the address stub but whose assignment still needs the member's type.
+        @tparam Mem   a reflection of the data member.
+        @tparam Style the name style.
+        @param ms the member's resolved scope.
+        @param id the member's identifier.
+        @return the setter's C symbol. */
+    template <std::meta::info Mem, class Style>
+    std::string emit_field_set_thunk(const member_scope& ms,
+                                     const std::string& id) {
+        constexpr std::meta::info MT{std::meta::type_of(Mem)};
+        const std::string lookup{"wcs::named_field(" + ms.owner + ", \"" + id +
+                                 "\")"};
+        constexpr bool is_str{classify(MT) == marshal_kind::utf8_string};
+        constexpr bool is_bool{classify(MT) == marshal_kind::boolean};
+        const bound_symbol set{*_writer.doc,
+                               _writer.sym_prefix + "_set_" + id + ms.suffix,
+                               _writer.members, 2};
+        code_writer st{set.thunk()};
+        st.line("void {}(void* self, {} v, welder_error* err) { return "
+                "wcs::shim::field_set<{}, {}>(self, err, v); }",
+                set.name(), wire_param_v<MT>, _writer.cpp_anchor, lookup);
+        st.blank();
+        set.pinvoke().line(
+            "{} internal static partial void {}({} self, {}{} v, out "
+            "WelderError err);",
+            import_attr(is_str), set.name(), _writer.handle_cs,
+            is_bool ? "[MarshalAs(UnmanagedType.U1)] " : "",
+            pinvoke_type<MT, Style>(false));
+        return set.name();
+    }
+
+    /** The erased binding of data member @a Mem: a `static_assert` into the
+        class's shim shard (the layout contract), and a property whose arms
+        call the document's SHARED entry points with the generator-computed
+        offset — no per-member thunk, no per-member P/Invoke. A handle-like
+        member erases its getter only (the live-view address); its setter
+        stays the bespoke `field_set`, which needs the member's own type.
+        @tparam Mem   a reflection of the data member (eligibility already
+                      decided by @ref erased_field_way).
+        @tparam Style the name style.
+        @param ms the member's resolved scope (suffix known empty). */
+    template <std::meta::info Mem, class Style>
+    void emit_erased_field(const member_scope& ms) {
+        constexpr std::meta::info MT{std::meta::type_of(Mem)};
+        constexpr erased_way w{erased_field_way(Mem)};
+        claim_erased_stubs(*_writer.doc);
+        const std::string id{std::meta::identifier_of(Mem)};
+        constexpr std::size_t off{std::meta::offset_of(Mem).bytes};
+        constexpr std::size_t idx{nsdm_index(Mem)};
+        constexpr bool read_only{std::meta::is_const_type(MT) ||
+                                 ::welder::member_no_reassign(Mem, cs)};
+        code_writer t{_writer.doc->current_shim(), 0};
+        t.line("static_assert(wcs::shim::nsdm_offset<{}>({}) == {}, "
+               "\"welder: erased-field offset drift: {}\");",
+               _writer.cpp_anchor, idx, off, id);
+        t.blank();
+
+        // The wire suffix and the property-get call expression.
+        std::string wire_cs{};
+        if constexpr (w == erased_way::scalar)
+            wire_cs = scalar_spell(MT).cs;
+        else if constexpr (w == erased_way::enum_)
+            wire_cs = enum_wire_spell(MT).cs;
+        else if constexpr (w == erased_way::boolean)
+            wire_cs = "bool";
+        std::string get_call{};
+        if constexpr (w == erased_way::string)
+            get_call = cat("NativeMethods.welder__field_get_str({}, {}, out "
+                           "WelderError _e)",
+                           _writer.handle_field, off);
+        else if constexpr (w == erased_way::addr)
+            get_call = cat("NativeMethods.welder__field_addr({}, {}, out "
+                           "WelderError _e)",
+                           _writer.handle_field, off);
+        else if constexpr (w == erased_way::enum_)
+            get_call = "(" + public_type<MT, Style>() + ")" +
+                       cat("NativeMethods.welder__field_get_{}({}, {}, out "
+                           "WelderError _e)",
+                           wire_cs, _writer.handle_field, off);
+        else
+            get_call = cat("NativeMethods.welder__field_get_{}({}, {}, out "
+                           "WelderError _e)",
+                           wire_cs, _writer.handle_field, off);
+
+        // A handle-like member's assignment: the bespoke thunk, emitted
+        // before the property so the artifacts keep their declaration order.
+        std::string setsym{};
+        if constexpr (w == erased_way::addr && !read_only)
+            setsym = emit_field_set_thunk<Mem, Style>(ms, id);
+
+        const std::string pname{
+            ::welder::name_of<Mem, cs, Style, ::welder::ent_kind::field>()};
+        _writer.surface_names.push_back(pname);
+        emit_doc_comment(_writer.members, "        ", ::welder::doc_of<Mem>());
+        code_writer mw{_writer.members, 2};
+        mw.line("public {} {}", public_type<MT, Style>(), pname);
+        {
+            const auto prop{mw.braces()};
+            mw.line("get");
+            {
+                const auto arm{mw.braces()};
+                mw.raw(wrapper_return_body<MT, Style,
+                                           field_return_policy(MT)>(
+                    get_call, mw.indentation(), "this"));
+            }
+            if constexpr (!read_only) {
+                if constexpr (w == erased_way::addr) {
+                    call_pieces vcp{};
+                    append_one_param<MT, Style>(vcp, 0, "value");
+                    emit_set_arm(mw, vcp,
+                                 "NativeMethods." + setsym + "(" +
+                                     _writer.handle_field + ", " +
+                                     vcp.wrapper_args +
+                                     ", out WelderError _e);");
+                } else {
+                    mw.line("set");
+                    {
+                        const auto arm{mw.braces()};
+                        std::string v{"value"};
+                        if constexpr (w == erased_way::enum_)
+                            v = "(" + wire_cs + ")value";
+                        const std::string suffix{
+                            w == erased_way::string ? "str" : wire_cs};
+                        mw.line("NativeMethods.welder__field_set_{}({}, {}, "
+                                "{}, out WelderError _e);",
+                                suffix, _writer.handle_field, off, v);
+                        mw.line("WelderInterop.ThrowIfError(in _e);");
+                    }
+                }
+            }
+        }
+        mw.blank();
+    }
+
     /** The live-field binding for a scalar/enum sequence member: the getter
         thunk hands out the MEMBER'S ADDRESS (a view the wrapper pins to its
         parent), the setter — absent under `mark::no_reassign` — copy-assigns
@@ -236,17 +370,44 @@ class field_emitter {
                                  "\")"};
         constexpr bool read_only{::welder::member_no_reassign(Mem, cs)};
         const std::string V{container_ref<bare(MT)>()};
-        const bound_symbol get{*_writer.doc, _writer.sym_prefix + "_get_" + id + ms.suffix,
-                               _writer.members, 2};
-        code_writer t{get.thunk()};
-        t.line("void* {}(void* self, welder_error* err) { return "
-               "wcs::shim::field_addr<{}, {}>(self, err); }",
-               get.name(), _writer.cpp_anchor, lookup);
-        t.blank();
-        get.pinvoke().line(
-            "[LibraryImport(Lib)] internal static partial IntPtr {}({} self, "
-            "out WelderError err);",
-            get.name(), _writer.handle_cs);
+        // The getter is a pure member-address handout, so an eligible member
+        // erases it to the shared address stub (same wire, no per-member
+        // thunk); the setter below keeps its bespoke thunk either way — the
+        // whole-container copy-assignment needs the member's own type.
+        std::string get_call{};
+        bool erased{false};
+        if constexpr (erased_seq_eligible(Mem)) {
+            if (_writer.doc->opts.erased_fields && ms.suffix.empty()) {
+                erased = true;
+                claim_erased_stubs(*_writer.doc);
+                constexpr std::size_t off{std::meta::offset_of(Mem).bytes};
+                constexpr std::size_t idx{nsdm_index(Mem)};
+                code_writer t{_writer.doc->current_shim(), 0};
+                t.line("static_assert(wcs::shim::nsdm_offset<{}>({}) == {}, "
+                       "\"welder: erased-field offset drift: {}\");",
+                       _writer.cpp_anchor, idx, off, id);
+                t.blank();
+                get_call = cat("NativeMethods.welder__field_addr({}, {}, out "
+                               "WelderError _e)",
+                               _writer.handle_field, off);
+            }
+        }
+        if (!erased) {
+            const bound_symbol get{*_writer.doc,
+                                   _writer.sym_prefix + "_get_" + id + ms.suffix,
+                                   _writer.members, 2};
+            code_writer t{get.thunk()};
+            t.line("void* {}(void* self, welder_error* err) { return "
+                   "wcs::shim::field_addr<{}, {}>(self, err); }",
+                   get.name(), _writer.cpp_anchor, lookup);
+            t.blank();
+            get.pinvoke().line(
+                "[LibraryImport(Lib)] internal static partial IntPtr {}({} self, "
+                "out WelderError err);",
+                get.name(), _writer.handle_cs);
+            get_call = cat("NativeMethods.{}({}, out WelderError _e)",
+                           get.name(), _writer.handle_field);
+        }
         std::string setsym{};
         if constexpr (!read_only) {
             const bound_symbol set{*_writer.doc,
@@ -268,15 +429,14 @@ class field_emitter {
                               ::welder::ent_kind::field>()};
         _writer.surface_names.push_back(pname);
         emit_doc_comment(_writer.members, "        ", ::welder::doc_of<Mem>());
-        code_writer mw{get.wrapper()};
+        code_writer mw{_writer.members, 2};
         mw.line("public {} {}", V, pname);
         {
             const auto prop{mw.braces()};
             mw.line("get");
             {
                 const auto arm{mw.braces()};
-                mw.line("IntPtr _r = NativeMethods.{}({}, out WelderError _e);",
-                        get.name(), _writer.handle_field);
+                mw.line("IntPtr _r = {};", get_call);
                 mw.line("WelderInterop.ThrowIfError(in _e);");
                 mw.line("var _v = new {}(_r, false);", V);
                 mw.line("_v._owner = this;");

@@ -60,6 +60,17 @@ struct options {
         one of @ref shards files round-robin, so they compile in parallel.
         The managed side is unaffected — P/Invoke binds symbols, not TUs. */
     std::size_t shards{1};
+    /** Whether eligible data members bind through the ~25 SHARED erased
+        entry points (typed load/store at a generator-computed offset) instead
+        of one thunk + one `[LibraryImport]` per accessor per member — the
+        difference between ~110k and ~20k P/Invokes on a record-dominated
+        surface, on both compilers (gcc instantiates that many fewer thunks;
+        the interop source generator emits that many fewer marshalling
+        stubs). Layout safety is a generated `static_assert` per erased
+        member re-deriving the offset on the compiling platform. Off = the
+        bespoke per-member emission for everything (the pre-erasure
+        artifact, byte for byte). */
+    bool erased_fields{true};
     /** How many files `Bindings.cs` is split into (default 1 — the single
         file). Unlike @ref shards this is not a compile-time measure: Roslyn is
         indifferent to file count (measured — one 11 MB file and 83 small ones
@@ -144,6 +155,11 @@ struct document {
         container_keys.push_back(std::move(key));
         return true;
     }
+    /** Whether any member took the erased path this run — gates rendering the
+        shared entry points (their definitions in shim part 0, their
+        `[LibraryImport]` declarations in the managed epilogue). Flipped via
+        `claim_erased_stubs`, which also registers their symbols. */
+    bool erased_used{false};
     std::vector<std::string> symbols{};  /**< Every emitted C symbol (collision check). */
     /** raw `::qualified` C++ name → final C# name, filled by make_class/make_enum.
         Type REFERENCES are emitted as `\x01raw\x02` placeholders and reconciled
@@ -311,6 +327,8 @@ struct document {
             out += "void welder_free(void* p) { std::free(p); }\n\n"
                    "const char* welder_dup_utf8(const char* s) { return "
                    "wcs::shim::dup(s ? s : \"\"); }\n\n";
+        if (part == 0 && erased_used)
+            out += _erased_stub_definitions();
         out += "} // extern \"C\"\n";
         return apply_type_anchors(std::move(out));
     }
@@ -605,14 +623,122 @@ struct document {
     }
 
     /** The two declarations every assembly needs regardless of what is bound
-        (the allocator hooks the marshalling helpers call).
+        (the allocator hooks the marshalling helpers call), plus — when any
+        member took the erased path — the shared erased-field entry points.
         @return the trailing P/Invoke declarations. */
     std::string _cs_pinvoke_epilogue() const {
-        return "        [LibraryImport(Lib)] internal static partial void "
-               "welder_free(IntPtr p);\n"
-               "        [LibraryImport(Lib, StringMarshalling = "
-               "StringMarshalling.Utf8)] internal static partial IntPtr "
-               "welder_dup_utf8(string s);\n";
+        std::string out{
+            "        [LibraryImport(Lib)] internal static partial void "
+            "welder_free(IntPtr p);\n"
+            "        [LibraryImport(Lib, StringMarshalling = "
+            "StringMarshalling.Utf8)] internal static partial IntPtr "
+            "welder_dup_utf8(string s);\n"};
+        if (erased_used)
+            out += _erased_stub_declarations();
+        return out;
+    }
+
+    /** The native definitions of the shared erased-field entry points (shim
+        part 0, inside `extern "C"`). One typed load/store per scalar width,
+        the `bool` pair, the live-view address form, and the `std::string`
+        pair. Every managed caller passes the byte offset the GENERATOR
+        computed; the per-member `static_assert`s in the shim shards hold the
+        layout contract, so the casts here are sound on any platform that
+        compiles. The `self` handles arrive pre-adjusted (each wrapper level's
+        handle points at ITS subobject), so `self + off` is the member.
+        @return the definitions text. */
+    static std::string _erased_stub_definitions() {
+        static constexpr const char* scalars[][2]{
+            {"sbyte", "std::int8_t"},   {"byte", "std::uint8_t"},
+            {"short", "std::int16_t"},  {"ushort", "std::uint16_t"},
+            {"int", "std::int32_t"},    {"uint", "std::uint32_t"},
+            {"long", "std::int64_t"},   {"ulong", "std::uint64_t"},
+            {"float", "float"},         {"double", "double"}};
+        std::string out{
+            "// The ERASED-FIELD entry points: shared by every erased "
+            "data-member property.\n"
+            "// The offsets arrive from the managed side (generator-computed); "
+            "the per-member\n"
+            "// static_asserts in the shim shards verify them on this "
+            "platform's ABI.\n"
+            "static void welder__field_ok(welder_error* e) { e->code = 0; "
+            "e->message = nullptr; }\n\n"};
+        for (const auto& [cs, cpp] : scalars) {
+            out += std::string{cpp} + " welder__field_get_" + cs +
+                   "(void* self, std::int32_t off, welder_error* err) { "
+                   "welder__field_ok(err); return *reinterpret_cast<const " +
+                   cpp +
+                   "*>(static_cast<const char*>(self) + off); }\n"
+                   "void welder__field_set_" +
+                   cs + "(void* self, std::int32_t off, " + cpp +
+                   " v, welder_error* err) { welder__field_ok(err); "
+                   "*reinterpret_cast<" +
+                   cpp + "*>(static_cast<char*>(self) + off) = v; }\n";
+        }
+        out +=
+            "bool welder__field_get_bool(void* self, std::int32_t off, "
+            "welder_error* err) { welder__field_ok(err); return "
+            "*reinterpret_cast<const bool*>(static_cast<const char*>(self) + "
+            "off); }\n"
+            "void welder__field_set_bool(void* self, std::int32_t off, bool v, "
+            "welder_error* err) { welder__field_ok(err); "
+            "*reinterpret_cast<bool*>(static_cast<char*>(self) + off) = v; }\n"
+            "void* welder__field_addr(void* self, std::int32_t off, "
+            "welder_error* err) { welder__field_ok(err); return "
+            "static_cast<char*>(self) + off; }\n"
+            "const char* welder__field_get_str(void* self, std::int32_t off, "
+            "welder_error* err) { return wcs::shim::caught<const char*>(err, "
+            "[&]() -> const char* { return "
+            "wcs::shim::dup(reinterpret_cast<const "
+            "::std::string*>(static_cast<const char*>(self) + off)->c_str()); "
+            "}); }\n"
+            "void welder__field_set_str(void* self, std::int32_t off, const "
+            "char* v, welder_error* err) { wcs::shim::caught<int>(err, [&]() "
+            "-> int { *reinterpret_cast<::std::string*>(static_cast<char*>("
+            "self) + off) = v ? v : \"\"; return 0; }); }\n\n";
+        return out;
+    }
+
+    /** The `[LibraryImport]` declarations of the shared erased-field entry
+        points. `self` is the ABSTRACT `SafeHandle` — inbound marshalling only
+        needs AddRef/Release, so every per-class handle passes as the base and
+        keeps its premature-collection safety.
+        @return the declarations text (inside `NativeMethods`). */
+    static std::string _erased_stub_declarations() {
+        static constexpr const char* scalars[]{"sbyte", "byte",  "short",
+                                               "ushort", "int",  "uint",
+                                               "long",  "ulong", "float",
+                                               "double"};
+        std::string out{};
+        for (const char* cs : scalars) {
+            out += std::string{
+                       "        [LibraryImport(Lib)] internal static partial "} +
+                   cs + " welder__field_get_" + cs +
+                   "(SafeHandle self, int off, out WelderError err);\n"
+                   "        [LibraryImport(Lib)] internal static partial void "
+                   "welder__field_set_" +
+                   cs + "(SafeHandle self, int off, " + cs +
+                   " v, out WelderError err);\n";
+        }
+        out +=
+            "        [LibraryImport(Lib)] [return: "
+            "MarshalAs(UnmanagedType.U1)] internal static partial bool "
+            "welder__field_get_bool(SafeHandle self, int off, out WelderError "
+            "err);\n"
+            "        [LibraryImport(Lib)] internal static partial void "
+            "welder__field_set_bool(SafeHandle self, int off, "
+            "[MarshalAs(UnmanagedType.U1)] bool v, out WelderError err);\n"
+            "        [LibraryImport(Lib)] internal static partial IntPtr "
+            "welder__field_addr(SafeHandle self, int off, out WelderError "
+            "err);\n"
+            "        [LibraryImport(Lib)] internal static partial IntPtr "
+            "welder__field_get_str(SafeHandle self, int off, out WelderError "
+            "err);\n"
+            "        [LibraryImport(Lib, StringMarshalling = "
+            "StringMarshalling.Utf8)] internal static partial void "
+            "welder__field_set_str(SafeHandle self, int off, string v, out "
+            "WelderError err);\n";
+        return out;
     }
 };
 
