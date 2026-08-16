@@ -393,7 +393,7 @@ namespace csharp_cases
     }
 
     /// <summary>A 2-D integer point.</summary>
-    public class Point : IDisposable
+    public partial class Point : IDisposable
     {
         internal PointHandle _h_Point;
         internal object? _owner;
@@ -572,7 +572,7 @@ namespace csharp_cases
         }
     }
 
-    public class Size : IDisposable
+    public partial class Size : IDisposable
     {
         internal SizeHandle _h_Size;
         internal object? _owner;
@@ -650,7 +650,7 @@ namespace csharp_cases
         }
     }
 
-    public class Holder : IDisposable
+    public partial class Holder : IDisposable
     {
         internal HolderHandle _h_Holder;
         internal object? _owner;
@@ -722,7 +722,7 @@ namespace csharp_cases
         }
     }
 
-    public class Segment : IDisposable
+    public partial class Segment : IDisposable
     {
         internal SegmentHandle _h_Segment;
         internal object? _owner;
@@ -818,7 +818,7 @@ namespace csharp_cases
         }
     }
 
-    public class Animal : IDisposable
+    public partial class Animal : IDisposable
     {
         internal AnimalHandle _h_Animal;
         internal object? _owner;
@@ -881,7 +881,7 @@ namespace csharp_cases
         }
     }
 
-    public class Legged : IDisposable
+    public partial class Legged : IDisposable
     {
         internal LeggedHandle _h_Legged;
         internal object? _owner;
@@ -936,7 +936,7 @@ namespace csharp_cases
         }
     }
 
-    public class Dog : Animal
+    public partial class Dog : Animal
     {
         internal DogHandle _h_Dog;
         internal Dog(IntPtr handle, bool owns) : base(NativeMethods.welder_csharp_cases_Dog_as_csharp_cases_Animal(handle), false) { _h_Dog = new DogHandle(handle, owns); }
@@ -992,7 +992,7 @@ namespace csharp_cases
         }
     }
 
-    public class Basket : IDisposable
+    public partial class Basket : IDisposable
     {
         internal BasketHandle _h_Basket;
         internal object? _owner;
@@ -1146,7 +1146,7 @@ namespace csharp_cases
         }
     }
 
-    public class Route : IDisposable
+    public partial class Route : IDisposable
     {
         internal RouteHandle _h_Route;
         internal object? _owner;
@@ -1224,7 +1224,7 @@ namespace csharp_cases
         }
     }
 
-    public class Depot : IDisposable
+    public partial class Depot : IDisposable
     {
         internal DepotHandle _h_Depot;
         internal object? _owner;
@@ -1312,7 +1312,7 @@ namespace csharp_cases
         }
     }
 
-    public class Cable : IDisposable
+    public partial class Cable : IDisposable
     {
         internal CableHandle _h_Cable;
         internal object? _owner;
@@ -1376,7 +1376,7 @@ namespace csharp_cases
         }
     }
 
-    public class Shape : IDisposable
+    public partial class Shape : IDisposable
     {
         internal ShapeHandle _h_Shape;
         internal object? _owner;
@@ -1523,7 +1523,7 @@ namespace csharp_cases
         }
     }
 
-    public class Machine : IDisposable
+    public partial class Machine : IDisposable
     {
         internal MachineHandle _h_Machine;
         internal object? _owner;
@@ -1550,7 +1550,7 @@ namespace csharp_cases
         }
     }
 
-    public class Gauge : IDisposable
+    public partial class Gauge : IDisposable
     {
         internal GaugeHandle _h_Machine_Gauge;
         internal object? _owner;
@@ -1677,7 +1677,7 @@ namespace csharp_cases
         }
     }
 
-    public class Terrain : IDisposable
+    public partial class Terrain : IDisposable
     {
         internal TerrainHandle _h_Terrain;
         internal object? _owner;
@@ -1789,7 +1789,7 @@ namespace csharp_cases
         }
     }
 
-    public class Catalog : IDisposable
+    public partial class Catalog : IDisposable
     {
         internal CatalogHandle _h_Catalog;
         internal object? _owner;
@@ -1897,7 +1897,7 @@ namespace csharp_cases
         }
     }
 
-    public class WoodCrate : IDisposable
+    public partial class WoodCrate : IDisposable
     {
         internal WoodCrateHandle _h_WoodCrate;
         internal object? _owner;

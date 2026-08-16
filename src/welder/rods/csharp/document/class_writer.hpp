@@ -273,8 +273,10 @@ struct class_writer {
         emit_doc_comment(out, "    ",
                          doc_text.empty() ? nullptr : doc_text.c_str());
         // Unsealed: another welded type may derive (and the directors phase
-        // needs subclassable wrappers anyway).
-        w.line("public class {} : {}", cs_name,
+        // needs subclassable wrappers anyway). PARTIAL: consumers generate
+        // plain-C# extensions onto welded classes (wowlib's per-era format
+        // factories live as statics ON the welded family bases this way).
+        w.line("public partial class {} : {}", cs_name,
                base_ref.empty() ? std::string{"IDisposable"} : base_ref);
         {
             const auto cls{w.braces()};
