@@ -214,7 +214,8 @@ endfunction()
 # The csproj is written with file(GENERATE), so $<TARGET_FILE:...> resolves to the
 # built shim; `dotnet pack` must run AFTER the native target is built.
 function(welder_csharp_nuget_project name)
-  cmake_parse_arguments(NG "" "PACKAGE_ID;VERSION;TFM;OUTPUT_DIR" "" ${ARGN})
+  cmake_parse_arguments(NG "" "PACKAGE_ID;VERSION;TFM;OUTPUT_DIR"
+    "EXTRA_COMPILE" ${ARGN})
   if(NG_UNPARSED_ARGUMENTS)  # same version-mismatch trap as the generator above
     message(FATAL_ERROR
       "welder_csharp_nuget_project(${name}): unknown arguments "
@@ -248,11 +249,17 @@ function(welder_csharp_nuget_project name)
   endif()
   set(_rid ${_os}-${_arch})
 
-  # One <Compile> per generated wrapper file (CS_FILES may have split it).
+  # One <Compile> per generated wrapper file (CS_FILES may have split it),
+  # plus any EXTRA_COMPILE entries the caller supplies — files or MSBuild
+  # glob patterns (dir/*.cs) for sources generated OUTSIDE the rod, e.g. a
+  # consumer's typed facade classes over the generated surface.
   get_target_property(_bindings ${name} WELDER_CSHARP_BINDINGS)
   set(_compile_items "")
   foreach(_b IN LISTS _bindings)
     string(APPEND _compile_items "    <Compile Include=\"${_b}\" />\n")
+  endforeach()
+  foreach(_e IN LISTS NG_EXTRA_COMPILE)
+    string(APPEND _compile_items "    <Compile Include=\"${_e}\" />\n")
   endforeach()
   string(STRIP "${_compile_items}" _compile_items)
   file(GENERATE OUTPUT ${NG_OUTPUT_DIR}/${NG_PACKAGE_ID}.csproj CONTENT
