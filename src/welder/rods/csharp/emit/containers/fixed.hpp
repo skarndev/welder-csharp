@@ -178,6 +178,7 @@ class fixed_wrapper_emitter {
                     w.line("WelderInterop.ThrowIfError(in _e);");
                 }
             }
+            emit_foreach_enumerator(w, _wrapper_name, _element_ref);
             w.line("public void Dispose() => _h_{}.Dispose();", _wrapper_name);
         }
         w.blank();

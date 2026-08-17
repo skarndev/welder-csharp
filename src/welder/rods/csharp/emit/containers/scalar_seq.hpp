@@ -5,6 +5,7 @@
 #include <string>
 
 #include <welder/rods/csharp/document.hpp>
+#include <welder/rods/csharp/emit/containers/element.hpp>
 #include <welder/rods/csharp/emit/params.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/returns.hpp>
@@ -296,6 +297,7 @@ class scalar_seq_wrapper_emitter {
                 w.line("_v.CopyFrom(a);");
                 w.line("return _v;");
             }
+            emit_foreach_enumerator(w, _wrapper_name, _element_cs);
             w.line("public void Dispose() => _h_{}.Dispose();", _wrapper_name);
         }
         w.blank();

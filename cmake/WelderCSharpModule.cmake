@@ -276,11 +276,14 @@ function(welder_csharp_nuget_project name)
     <!-- The rod emits an XML doc comment for every bound entity; without this
          the package ships no .xml sidecar and consumers get bare IntelliSense
          with no descriptions. CS1591 is silenced because the generated
-         scaffolding (handles, wire structs) is deliberately undocumented, and
+         scaffolding (handles, wire structs) is deliberately undocumented,
          CS0649 because a director/owner field is assigned only from native
-         code, which the C# compiler cannot see. -->
+         code, which the C# compiler cannot see, and CS0108 because a
+         consumer's EXTRA_COMPILE sources may deliberately re-declare a
+         concrete's method on its partial family base (same signature, base
+         dispatches to the concrete) — intentional hiding. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>\$(NoWarn);CS1591;CS0649</NoWarn>
+    <NoWarn>\$(NoWarn);CS1591;CS0649;CS0108</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     ${_compile_items}

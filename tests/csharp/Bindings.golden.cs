@@ -2026,6 +2026,16 @@ namespace csharp_cases
             _v.CopyFrom(a);
             return _v;
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorInt _c;
+            private int _i;
+            internal Enumerator(VectorInt c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public int Current => _c[_i];
+        }
         public void Dispose() => _h_VectorInt.Dispose();
     }
 
@@ -2084,6 +2094,16 @@ namespace csharp_cases
             var _v = new ArrayDoublex3();
             _v.CopyFrom(a);
             return _v;
+        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly ArrayDoublex3 _c;
+            private int _i;
+            internal Enumerator(ArrayDoublex3 c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public double Current => _c[_i];
         }
         public void Dispose() => _h_ArrayDoublex3.Dispose();
     }
@@ -2162,6 +2182,16 @@ namespace csharp_cases
             _v.CopyFrom(a);
             return _v;
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorLevel _c;
+            private int _i;
+            internal Enumerator(VectorLevel c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public Level Current => _c[_i];
+        }
         public void Dispose() => _h_VectorLevel.Dispose();
     }
 
@@ -2226,6 +2256,16 @@ namespace csharp_cases
         {
             NativeMethods.welder_vec_csharp_cases_Point_clear(_h_VectorPoint, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
+        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorPoint _c;
+            private int _i;
+            internal Enumerator(VectorPoint c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public Point Current => _c[_i];
         }
         public void Dispose() => _h_VectorPoint.Dispose();
     }
@@ -2417,6 +2457,16 @@ namespace csharp_cases
                 WelderInterop.ThrowIfError(in _e);
             }
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly ArrayPointx2 _c;
+            private int _i;
+            internal Enumerator(ArrayPointx2 c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public Point Current => _c[_i];
+        }
         public void Dispose() => _h_ArrayPointx2.Dispose();
     }
 
@@ -2508,6 +2558,16 @@ namespace csharp_cases
             _v.CopyFrom(a);
             return _v;
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorByte _c;
+            private int _i;
+            internal Enumerator(VectorByte c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public byte Current => _c[_i];
+        }
         public void Dispose() => _h_VectorByte.Dispose();
     }
 
@@ -2573,6 +2633,16 @@ namespace csharp_cases
             NativeMethods.welder_vec_std_vector_unsigned_char_clear(_h_VectorVectorByte, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorVectorByte _c;
+            private int _i;
+            internal Enumerator(VectorVectorByte c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public VectorByte Current => _c[_i];
+        }
         public void Dispose() => _h_VectorVectorByte.Dispose();
     }
 
@@ -2631,6 +2701,16 @@ namespace csharp_cases
             var _v = new ArrayBytex4();
             _v.CopyFrom(a);
             return _v;
+        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly ArrayBytex4 _c;
+            private int _i;
+            internal Enumerator(ArrayBytex4 c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public byte Current => _c[_i];
         }
         public void Dispose() => _h_ArrayBytex4.Dispose();
     }
@@ -2697,6 +2777,16 @@ namespace csharp_cases
             NativeMethods.welder_vec_std_array_unsigned_char_4_clear(_h_VectorArrayBytex4, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
         }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorArrayBytex4 _c;
+            private int _i;
+            internal Enumerator(VectorArrayBytex4 c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public ArrayBytex4 Current => _c[_i];
+        }
         public void Dispose() => _h_VectorArrayBytex4.Dispose();
     }
 
@@ -2761,6 +2851,16 @@ namespace csharp_cases
         {
             NativeMethods.welder_vec_std_vector_csharp_cases_Point_clear(_h_VectorVectorPoint, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
+        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        /// <summary>Duck-typed foreach support (allocation-free).</summary>
+        public struct Enumerator
+        {
+            private readonly VectorVectorPoint _c;
+            private int _i;
+            internal Enumerator(VectorVectorPoint c) { _c = c; _i = -1; }
+            public bool MoveNext() => ++_i < _c.Count;
+            public VectorPoint Current => _c[_i];
         }
         public void Dispose() => _h_VectorVectorPoint.Dispose();
     }

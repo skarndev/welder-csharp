@@ -235,6 +235,7 @@ class vector_wrapper_emitter {
                        _symbol_stem, _wrapper_name);
                 w.line("WelderInterop.ThrowIfError(in _e);");
             }
+            emit_foreach_enumerator(w, _wrapper_name, _element_ref);
             w.line("public void Dispose() => _h_{}.Dispose();", _wrapper_name);
         }
         w.blank();

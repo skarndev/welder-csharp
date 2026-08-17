@@ -234,6 +234,10 @@ public class BindingTests
                         "vector<int> field -> live wrapper");
             nums.Add(4); // writes through to the C++ member
             Assert.Equal(4, bk.Nums.Count);
+            var sum = 0; // duck-typed foreach (pattern enumerator, no alloc)
+            foreach (var n in nums)
+                sum += n;
+            Assert.Equal(10, sum);
             var span = nums.AsSpan(); // zero-copy over the C++ buffer
             span[0] = 10;
             Assert.Equal(10, bk.Nums[0]);
@@ -330,6 +334,9 @@ public class BindingTests
         Assert.Equal(1, clusters[0].Count);
         clusters[0][0].X = 8;                   // live all the way down
         Assert.Equal(8, t.ClusterX(0, 0));
+        foreach (var cluster in clusters)       // foreach yields live views too
+            foreach (var point in cluster)
+                Assert.Equal(8, point.X);
     }
 
     [Fact]
