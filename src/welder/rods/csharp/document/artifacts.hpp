@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include <welder/rods/csharp/text.hpp> // emit_doc_comment (family surface)
+
 /** @file
     The **two artifacts** the C# rod emits, and the placeholder machinery that
     lets them be written out of order.
@@ -71,6 +73,17 @@ struct options {
         bespoke per-member emission for everything (the pre-erasure
         artifact, byte for byte). */
     bool erased_fields{true};
+    /** Whether every welded FAMILY — two or more welded classes deriving one
+        welded base (the shape a versioned class template welded per range
+        makes) — gets a synthesized version-agnostic surface on the base: the
+        member intersection the era classes bind identically, as dispatch
+        properties/methods that type-switch to the concrete class. Pure
+        managed-side text over the concretes' own accessors — no new thunks,
+        no new P/Invokes, the shim is untouched. A base-typed instance that is
+        not one of the family's concretes throws
+        `InvalidOperationException` from the dispatch default arm. Off = the
+        pre-family artifact, byte for byte. */
+    bool family_surface{true};
     /** How many files `Bindings.cs` is split into (default 1 — the single
         file). Unlike @ref shards this is not a compile-time measure: Roslyn is
         indifferent to file count (measured — one 11 MB file and 83 small ones
@@ -98,6 +111,42 @@ struct ns_section {
         KNOW, so no part can ever end mid-declaration. Monotonic: every writer
         appends. */
     std::vector<std::size_t> breaks{};
+};
+
+/** One bound member of a welded class, as the family-surface synthesis needs
+    it (@ref options::family_surface): the C# spellings the emitters resolved,
+    recorded beside the emission so the render-time pass can intersect a
+    family's surfaces without re-deriving anything from reflection. Type
+    spellings may carry the render-time reference placeholders — they compare
+    exactly (same C++ type ⇒ same placeholder) and resolve at render like any
+    other emitted reference. */
+struct family_member {
+    std::string name{};        /**< The member's C# name. */
+    bool method{false};        /**< Method (dispatchable overload) vs property. */
+    std::string type_str{};    /**< Property: the public C# type spelling. */
+    std::string elem_ref{};    /**< Property over a sequence of WELDED elements:
+                                    the element's type placeholder (else empty). */
+    bool handle_like{false};   /**< Property typed as a welded class. */
+    bool settable{false};      /**< Property: whether a `set` arm was emitted. */
+    std::string ret_str{};     /**< Method: the public return type spelling. */
+    std::string params_decl{}; /**< Method: the public parameter list. */
+    std::string args{};        /**< Method: the forwarding argument names. */
+    std::string doc{};         /**< The member's doc text (may be empty). */
+};
+
+/** One welded class's identity + member manifest, flushed by the class writer
+    for the family-surface synthesis: the render pass groups these by resolved
+    first-welded-base and hoists each family's member intersection onto the
+    base as dispatch members. */
+struct family_record {
+    std::string cs_path{};  /**< The dotted C# path from the root namespace. */
+    std::string cs_ns{};    /**< The enclosing namespace's dotted path. */
+    std::string cs_name{};  /**< The C# class name (the leaf). */
+    std::string base_ref{}; /**< First welded base's placeholder ref, or empty. */
+    bool nested{false};     /**< Nested classes neither form nor head a family. */
+    std::vector<std::string> surface_names{}; /**< The class's own member names. */
+    std::vector<std::string> nested_names{};  /**< Its nested type names. */
+    std::vector<family_member> members{};     /**< The member manifest. */
 };
 
 /** The growing pair of documents shared by every writer handle: the native shim and
@@ -142,6 +191,10 @@ struct document {
         half. `NativeMethods` is `partial`, so each part reopens it. */
     std::vector<std::size_t> pinvoke_breaks{};
     std::vector<ns_section> sections{}; /**< Per-namespace types + Global bodies. */
+    /** Every flushed class's family manifest (@ref options::family_surface):
+        the render pass groups them by resolved first-welded-base and
+        synthesizes each family's version-agnostic base surface. */
+    std::vector<family_record> family_records{};
     std::string containers{};   /**< Generated container-wrapper classes (root ns). */
     std::vector<std::string> container_keys{}; /**< Dedup (one wrapper per type). */
 
@@ -385,13 +438,26 @@ struct document {
             items.push_back({item::kind::pinvoke, "", std::move(t)});
         });
         items.push_back({item::kind::pinvoke, "", _cs_pinvoke_epilogue()});
+        // The synthesized family surfaces (options::family_surface): each
+        // block is one more `partial class <Base>` declaration, appended
+        // after its namespace's welded declarations.
+        const family_surface_text fam{_family_surface()};
+        const auto push_family = [&](const std::string& ns) {
+            for (const auto& [fns, text] : fam.blocks)
+                if (fns == ns)
+                    items.push_back({item::kind::types, ns, text});
+        };
         for (const auto& s : sections)
             if (s.ns.empty())
                 slice_at(s.types, s.breaks, [&](std::string t) {
                     items.push_back({item::kind::types, s.ns, std::move(t)});
                 });
-        if (!containers.empty())
-            items.push_back({item::kind::containers, "", containers});
+        push_family("");
+        std::string containers_text{containers};
+        if (fam.uses_family_vector)
+            containers_text += _family_vector_support();
+        if (!containers_text.empty())
+            items.push_back({item::kind::containers, "", std::move(containers_text)});
         for (const auto& s : sections)
             if (s.ns.empty() && !s.statics.empty())
                 items.push_back({item::kind::statics, s.ns, s.statics});
@@ -401,6 +467,7 @@ struct document {
             slice_at(s.types, s.breaks, [&](std::string t) {
                 items.push_back({item::kind::types, s.ns, std::move(t)});
             });
+            push_family(s.ns);
             if (!s.statics.empty())
                 items.push_back({item::kind::statics, s.ns, s.statics});
         }
@@ -477,6 +544,304 @@ struct document {
     }
 
   private:
+    /** What @ref _family_surface hands the render: one synthesized
+        `partial class <Base>` block per family, keyed by the base's
+        namespace, plus whether any block needs the `FamilyVector<T>`
+        support type. */
+    struct family_surface_text {
+        std::vector<std::pair<std::string, std::string>> blocks{};
+        bool uses_family_vector{false};
+    };
+
+    /** Resolve reference @a s — a `\x01raw\x02` placeholder, or already-plain
+        text — against @ref type_names.
+        @param s the reference.
+        @return the dotted C# path, or empty when the placeholder is unknown. */
+    std::string _resolved_ref(const std::string& s) const {
+        if (s.size() < 2 || s.front() != '\x01' || s.back() != '\x02')
+            return s;
+        const std::string raw{s.substr(1, s.size() - 2)};
+        for (const auto& [r, cs] : type_names)
+            if (r == raw)
+                return cs;
+        return {};
+    }
+
+    /** Synthesize the version-agnostic family surfaces
+        (@ref options::family_surface). A FAMILY is two or more top-level
+        welded classes sharing one welded base; each family's base gains a
+        `partial class` block holding the member INTERSECTION the concretes
+        bind identically, each member a dispatch on the concrete class:
+
+        - a property whose C# type is the same on every concrete hoists with
+          that exact type (settable when every concrete's is);
+        - a property typed as a welded class hoists as the member types'
+          common welded base — the getter upcasts, the setter downcasts (an
+          `InvalidCastException` names a wrong-era assignment);
+        - a property over a sequence of welded elements hoists as a read-only
+          `FamilyVector<ElementBase>` live view over the concrete's wrapper;
+        - a method overload whose parameter list and return type spell the
+          same on every concrete hoists as a forwarding dispatch.
+
+        Everything else — era-gated members, shape-changing members — stays
+        on the concretes, reached by pattern matching. The synthesis is pure
+        managed text over the concretes' own accessors: no thunks, no
+        P/Invokes, and the shim never changes.
+        @return the per-namespace blocks. */
+    family_surface_text _family_surface() const {
+        family_surface_text out{};
+        if (!opts.family_surface || family_records.empty())
+            return out;
+        const auto record_at = [&](const std::string& path) -> const family_record* {
+            if (path.empty())
+                return nullptr;
+            for (const auto& r : family_records)
+                if (r.cs_path == path)
+                    return &r;
+            return nullptr;
+        };
+        // The common welded base of the member types referenced by @a refs
+        // (each a type placeholder): every referenced class must BE it or
+        // directly derive it. Empty when there is none.
+        const auto common_base = [&](const std::vector<std::string>& refs)
+            -> std::string {
+            std::string candidate{};
+            for (const std::string& ref : refs) {
+                const std::string t{_resolved_ref(ref)};
+                const family_record* rec{record_at(t)};
+                if (!rec)
+                    return {};
+                const std::string b{_resolved_ref(rec->base_ref)};
+                if (candidate.empty())
+                    candidate = b.empty() ? t : b;
+                if (t != candidate && b != candidate)
+                    return {};
+            }
+            return candidate;
+        };
+        // Group the top-level records by resolved base path, in weld order.
+        std::vector<std::pair<std::string, std::vector<const family_record*>>>
+            families{};
+        for (const auto& r : family_records) {
+            if (r.nested || r.base_ref.empty())
+                continue;
+            const std::string base{_resolved_ref(r.base_ref)};
+            if (base.empty())
+                continue;
+            bool found{false};
+            for (auto& [b, v] : families)
+                if (b == base) {
+                    v.push_back(&r);
+                    found = true;
+                    break;
+                }
+            if (!found)
+                families.push_back({base, {&r}});
+        }
+        static constexpr const char* reserved[]{
+            "Dispose", "Clone", "ToString", "Equals", "GetHashCode"};
+        const std::string default_arm{
+            "default: throw new InvalidOperationException(\"no era dispatch "
+            "for \" + GetType().Name);"};
+        for (const auto& [base_path, children] : families) {
+            if (children.size() < 2)
+                continue;
+            const family_record* base{record_at(base_path)};
+            if (!base || base->nested)
+                continue;
+            std::string body{};
+            std::vector<std::string> emitted{};
+            for (const family_member& fm0 : children.front()->members) {
+                // One hoist per property name / method signature.
+                const std::string key{fm0.method
+                                          ? fm0.name + "(" + fm0.params_decl + ")"
+                                          : fm0.name};
+                bool skip{false};
+                for (const auto& e : emitted)
+                    if (e == key)
+                        skip = true;
+                for (const char* r : reserved)
+                    if (fm0.name == r)
+                        skip = true;
+                for (const auto* names : {&base->surface_names,
+                                          &base->nested_names})
+                    for (const auto& n : *names)
+                        if (n == fm0.name)
+                            skip = true;
+                if (skip || fm0.name == base->cs_name)
+                    continue;
+                emitted.push_back(key);
+                // The matching entry on EVERY concrete, or no hoist.
+                std::vector<const family_member*> ms{};
+                for (const family_record* c : children) {
+                    const family_member* hit{nullptr};
+                    for (const family_member& m : c->members)
+                        if (m.name == fm0.name && m.method == fm0.method &&
+                            (!m.method || m.params_decl == fm0.params_decl))
+                            hit = &m;
+                    if (!hit)
+                        break;
+                    ms.push_back(hit);
+                }
+                if (ms.size() != children.size())
+                    continue;
+                if (fm0.method) {
+                    bool same_ret{true};
+                    for (const family_member* m : ms)
+                        if (m->ret_str != fm0.ret_str)
+                            same_ret = false;
+                    if (!same_ret)
+                        continue;
+                    emit_doc_comment(body, "        ",
+                                     fm0.doc.empty() ? nullptr : fm0.doc.c_str());
+                    const bool is_void{fm0.ret_str == "void"};
+                    body += "        public " + fm0.ret_str + " " + fm0.name +
+                            "(" + fm0.params_decl + ")\n        {\n"
+                            "            switch (this)\n            {\n";
+                    for (const family_record* c : children)
+                        body += "                case " + c->cs_path + " _c: " +
+                                (is_void ? "_c." + fm0.name + "(" + fm0.args +
+                                               "); return;"
+                                         : "return _c." + fm0.name + "(" +
+                                               fm0.args + ");") +
+                                "\n";
+                    body += "                " + default_arm +
+                            "\n            }\n        }\n\n";
+                    continue;
+                }
+                // Properties: exact-type, welded-base, or sequence-of-welded.
+                bool same_type{true}, all_handle{true}, all_seq{true},
+                    settable{fm0.settable};
+                for (const family_member* m : ms) {
+                    if (m->type_str != fm0.type_str)
+                        same_type = false;
+                    if (!m->handle_like)
+                        all_handle = false;
+                    if (m->elem_ref.empty())
+                        all_seq = false;
+                    if (!m->settable)
+                        settable = false;
+                }
+                const auto refs_of = [&](bool elem) {
+                    std::vector<std::string> refs{};
+                    for (const family_member* m : ms)
+                        refs.push_back(elem ? m->elem_ref : m->type_str);
+                    return refs;
+                };
+                std::string hoist_type{}, elem_base{};
+                if (same_type) {
+                    hoist_type = fm0.type_str;
+                } else if (all_handle) {
+                    hoist_type = common_base(refs_of(false));
+                    if (hoist_type.empty())
+                        continue;
+                } else if (all_seq) {
+                    elem_base = common_base(refs_of(true));
+                    if (elem_base.empty())
+                        continue;
+                    hoist_type = "FamilyVector<" + elem_base + ">";
+                    out.uses_family_vector = true;
+                    settable = false;
+                } else {
+                    continue;
+                }
+                emit_doc_comment(body, "        ",
+                                 fm0.doc.empty() ? nullptr : fm0.doc.c_str());
+                body += "        public " + hoist_type + " " + fm0.name +
+                        "\n        {\n            get\n            {\n"
+                        "                switch (this)\n                {\n";
+                for (std::size_t i{0}; i < children.size(); ++i) {
+                    const family_record* c{children[i]};
+                    if (elem_base.empty()) {
+                        body += "                    case " + c->cs_path +
+                                " _c: return _c." + fm0.name + ";\n";
+                    } else {
+                        body += "                    case " + c->cs_path +
+                                " _c:\n                    {\n"
+                                "                        var _s = _c." +
+                                fm0.name +
+                                ";\n                        return new "
+                                "FamilyVector<" +
+                                elem_base +
+                                ">(() => _s.Count, _k => _s[_k]);\n"
+                                "                    }\n";
+                    }
+                }
+                body += "                    " + default_arm +
+                        "\n                }\n            }\n";
+                if (settable) {
+                    body += "            set\n            {\n"
+                            "                switch (this)\n                {\n";
+                    for (std::size_t i{0}; i < children.size(); ++i) {
+                        const family_record* c{children[i]};
+                        const std::string cast{
+                            same_type ? std::string{}
+                                      : "(" + ms[i]->type_str + ")"};
+                        body += "                    case " + c->cs_path +
+                                " _c: _c." + fm0.name + " = " + cast +
+                                "value; break;\n";
+                    }
+                    body += "                    " + default_arm +
+                            "\n                }\n            }\n";
+                }
+                body += "        }\n\n";
+            }
+            if (body.empty())
+                continue;
+            std::string block{
+                "    // Version-agnostic family surface (welder "
+                "family_surface): the members every\n"
+                "    // concrete class deriving " +
+                base->cs_name +
+                " binds identically, dispatched on the\n"
+                "    // concrete class. Era-gated members stay on the "
+                "concretes - pattern match to\n"
+                "    // reach them.\n"
+                "    public partial class " +
+                base->cs_name + "\n    {\n"};
+            block += body;
+            block += "    }\n\n";
+            out.blocks.push_back({base->cs_ns, std::move(block)});
+        }
+        return out;
+    }
+
+    /** The `FamilyVector<T>` support type — the read-only, base-typed live
+        view the synthesized sequence properties return. Rendered once, with
+        the generated container wrappers, when any family hoisted a sequence
+        member. @return the class text, at namespace depth. */
+    static std::string _family_vector_support() {
+        return
+            "    /// <summary>A read-only live view over a per-era sequence "
+            "member, element-typed as the\n"
+            "    /// family base: the version-agnostic spelling of a welded "
+            "family's vector and\n"
+            "    /// fixed-array members. Count and the indexer read through "
+            "to the underlying\n"
+            "    /// native container; foreach is duck-typed.</summary>\n"
+            "    public sealed class FamilyVector<T> where T : class\n"
+            "    {\n"
+            "        private readonly Func<int> _count;\n"
+            "        private readonly Func<int, T> _get;\n"
+            "        public FamilyVector(Func<int> count, Func<int, T> get) "
+            "{ _count = count; _get = get; }\n"
+            "        public int Count => _count();\n"
+            "        public T this[int i] => _get(i);\n"
+            "        public Enumerator GetEnumerator() => new "
+            "Enumerator(this);\n"
+            "        /// <summary>Duck-typed foreach support.</summary>\n"
+            "        public struct Enumerator\n"
+            "        {\n"
+            "            private readonly FamilyVector<T> _c;\n"
+            "            private int _i;\n"
+            "            internal Enumerator(FamilyVector<T> c) { _c = c; "
+            "_i = -1; }\n"
+            "            public bool MoveNext() => ++_i < _c.Count;\n"
+            "            public T Current => _c[_i];\n"
+            "        }\n"
+            "    }\n\n";
+    }
+
     /** The file header every part opens with (comment banner, `#nullable`,
         `using`s). @return the shared preamble text. */
     std::string _cs_header() const {

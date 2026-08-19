@@ -87,6 +87,11 @@ struct class_writer {
     std::vector<std::string> surface_names{};
     std::vector<std::string> nested_names{};
     std::string members{};        /**< Accumulated property/method/ctor text. */
+    /** The member manifest the family-surface synthesis intersects
+        (@ref options::family_surface) — recorded by the field/method
+        emitters beside their emissions, flushed into
+        @ref document::family_records with the class's identities. */
+    std::vector<family_member> family_members{};
 
     /** One recorded comparison-operator emission, held back until flush: C#
         requires `==`/`!=`, `<`/`>` and `<=`/`>=` in PAIRS, so pairing is
@@ -130,6 +135,7 @@ struct class_writer {
         surface_names = std::move(o.surface_names);
         nested_names = std::move(o.nested_names);
         members = std::move(o.members);
+        family_members = std::move(o.family_members);
         comparisons = std::move(o.comparisons);
         indexer_sigs = std::move(o.indexer_sigs);
         o.doc = nullptr;
@@ -355,6 +361,13 @@ struct class_writer {
         // into its owner's buffer and is never a boundary of its own.
         if (!sink)
             doc->section(cs_ns).breaks.push_back(out.size());
+        // The class's family manifest, for the render-time family-surface
+        // synthesis (options::family_surface).
+        if (doc->opts.family_surface)
+            doc->family_records.push_back(
+                {cs_path, cs_ns, cs_name, base_ref, sink != nullptr,
+                 std::move(surface_names), std::move(nested_names),
+                 std::move(family_members)});
     }
 };
 
