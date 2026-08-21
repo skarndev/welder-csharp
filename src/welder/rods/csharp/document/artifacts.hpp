@@ -73,17 +73,6 @@ struct options {
         bespoke per-member emission for everything (the pre-erasure
         artifact, byte for byte). */
     bool erased_fields{true};
-    /** Whether every welded FAMILY — two or more welded classes deriving one
-        welded base (the shape a versioned class template welded per range
-        makes) — gets a synthesized version-agnostic surface on the base: the
-        member intersection the era classes bind identically, as dispatch
-        properties/methods that type-switch to the concrete class. Pure
-        managed-side text over the concretes' own accessors — no new thunks,
-        no new P/Invokes, the shim is untouched. A base-typed instance that is
-        not one of the family's concretes throws
-        `InvalidOperationException` from the dispatch default arm. Off = the
-        pre-family artifact, byte for byte. */
-    bool family_surface{true};
     /** How many files `Bindings.cs` is split into (default 1 — the single
         file). Unlike @ref shards this is not a compile-time measure: Roslyn is
         indifferent to file count (measured — one 11 MB file and 83 small ones
@@ -114,12 +103,12 @@ struct ns_section {
 };
 
 /** One bound member of a welded class, as the family-surface synthesis needs
-    it (@ref options::family_surface): the C# spellings the emitters resolved,
-    recorded beside the emission so the render-time pass can intersect a
-    family's surfaces without re-deriving anything from reflection. Type
-    spellings may carry the render-time reference placeholders — they compare
-    exactly (same C++ type ⇒ same placeholder) and resolve at render like any
-    other emitted reference. */
+    it (the `[[=welder::mark::family_surface]]` opt-in): the C# spellings the
+    emitters resolved, recorded beside the emission so the render-time pass
+    can intersect a family's surfaces without re-deriving anything from
+    reflection. Type spellings may carry the render-time reference
+    placeholders — they compare exactly (same C++ type ⇒ same placeholder)
+    and resolve at render like any other emitted reference. */
 struct family_member {
     std::string name{};        /**< The member's C# name. */
     bool method{false};        /**< Method (dispatchable overload) vs property. */
@@ -144,6 +133,9 @@ struct family_record {
     std::string cs_name{};  /**< The C# class name (the leaf). */
     std::string base_ref{}; /**< First welded base's placeholder ref, or empty. */
     bool nested{false};     /**< Nested classes neither form nor head a family. */
+    bool marked{false};     /**< Carries the `family_surface` mark for this rod's
+                                 language — the OPT-IN a base must have for the
+                                 synthesis to touch it. */
     std::vector<std::string> surface_names{}; /**< The class's own member names. */
     std::vector<std::string> nested_names{};  /**< Its nested type names. */
     std::vector<family_member> members{};     /**< The member manifest. */
@@ -191,9 +183,10 @@ struct document {
         half. `NativeMethods` is `partial`, so each part reopens it. */
     std::vector<std::size_t> pinvoke_breaks{};
     std::vector<ns_section> sections{}; /**< Per-namespace types + Global bodies. */
-    /** Every flushed class's family manifest (@ref options::family_surface):
-        the render pass groups them by resolved first-welded-base and
-        synthesizes each family's version-agnostic base surface. */
+    /** Every flushed class's family manifest: the render pass groups them by
+        resolved first-welded-base and synthesizes a version-agnostic base
+        surface for each family whose base carries the
+        `[[=welder::mark::family_surface]]` opt-in. */
     std::vector<family_record> family_records{};
     std::string containers{};   /**< Generated container-wrapper classes (root ns). */
     std::vector<std::string> container_keys{}; /**< Dedup (one wrapper per type). */
@@ -438,9 +431,9 @@ struct document {
             items.push_back({item::kind::pinvoke, "", std::move(t)});
         });
         items.push_back({item::kind::pinvoke, "", _cs_pinvoke_epilogue()});
-        // The synthesized family surfaces (options::family_surface): each
-        // block is one more `partial class <Base>` declaration, appended
-        // after its namespace's welded declarations.
+        // The synthesized family surfaces (the marked bases): each block is
+        // one more `partial class <Base>` declaration, appended after its
+        // namespace's welded declarations.
         const family_surface_text fam{_family_surface()};
         const auto push_family = [&](const std::string& ns) {
             for (const auto& [fns, text] : fam.blocks)
@@ -567,11 +560,14 @@ struct document {
         return {};
     }
 
-    /** Synthesize the version-agnostic family surfaces
-        (@ref options::family_surface). A FAMILY is two or more top-level
-        welded classes sharing one welded base; each family's base gains a
-        `partial class` block holding the member INTERSECTION the concretes
-        bind identically, each member a dispatch on the concrete class:
+    /** Synthesize the version-agnostic family surfaces. A FAMILY is two or
+        more top-level welded classes sharing one welded base; a family whose
+        base carries the `[[=welder::mark::family_surface]]` opt-in (covering
+        this rod's language) gains a `partial class` block ON the base holding
+        the member INTERSECTION the concretes bind identically, each member a
+        dispatch on the concrete class. The mark is strictly required —
+        synthesizing members onto a base is too intrusive to infer from
+        structure alone, so an unmarked base is never touched:
 
         - a property whose C# type is the same on every concrete hoists with
           that exact type (settable when every concrete's is);
@@ -590,7 +586,7 @@ struct document {
         @return the per-namespace blocks. */
     family_surface_text _family_surface() const {
         family_surface_text out{};
-        if (!opts.family_surface || family_records.empty())
+        if (family_records.empty())
             return out;
         const auto record_at = [&](const std::string& path) -> const family_record* {
             if (path.empty())
@@ -647,7 +643,7 @@ struct document {
             if (children.size() < 2)
                 continue;
             const family_record* base{record_at(base_path)};
-            if (!base || base->nested)
+            if (!base || base->nested || !base->marked)
                 continue;
             std::string body{};
             std::vector<std::string> emitted{};

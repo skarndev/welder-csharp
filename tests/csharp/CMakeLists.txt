@@ -125,8 +125,9 @@ welder_csharp_generate_bindings(welder_test_cs_namespace
   OUTPUT_DIR ${_ws}/namespace
   DEPENDS ${WELDER_TEST_COMMON_CPP}/namespace.hpp)
 
-# The version-family synthesis (options::family_surface): per-era template
-# instantiations sharing a welded base gain dispatch members ON the base.
+# The version-family synthesis: per-era template instantiations sharing a
+# welded base marked [[=welder::mark::family_surface]] gain dispatch members
+# ON the base (an unmarked base gains nothing — the opt-in default).
 welder_csharp_generate_bindings(welder_test_cs_family
   SOURCES cpp/gen_family.cpp
   LIBRARY welder_test_cs_family

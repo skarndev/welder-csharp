@@ -103,8 +103,7 @@ class method_emitter {
                     _writer.handle_cs, _writer.handle_field}
                     .emit();
             }
-            if (_writer.doc->opts.family_surface)
-                record_family_method<fn, Style>();
+            record_family_method<fn, Style>();
         }
     }
 
@@ -168,12 +167,11 @@ class method_emitter {
     }
 
   private:
-    /** Record overload @a Fn into the class's family manifest
-        (@ref options::family_surface): the group's resolved C# name, the
-        public parameter list and return spelling, and the forwarding
-        argument names — what the render-time family synthesis needs to
-        hoist an identically-spelled overload onto the family base as a
-        dispatch method.
+    /** Record overload @a Fn into the class's family manifest: the group's
+        resolved C# name, the public parameter list and return spelling, and
+        the forwarding argument names — what the render-time family synthesis
+        needs to hoist an identically-spelled overload onto a MARKED family
+        base as a dispatch method.
         @tparam Fn    a reflection of the member function.
         @tparam Style the name style. */
     template <std::meta::info Fn, class Style>

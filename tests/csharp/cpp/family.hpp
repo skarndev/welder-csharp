@@ -1,16 +1,19 @@
 #pragma once
-// Version-FAMILY synthesis (options::family_surface): a class template welded
-// per "era" through namespace-scope aliases, every instantiation deriving one
-// welded base — the versioned-format shape wowlib welds. The render pass
-// hoists the member INTERSECTION onto the base as dispatch members, so
-// base-typed code reads and writes data without a downcast:
+// Version-FAMILY synthesis: a class template welded per "era" through
+// namespace-scope aliases, every instantiation deriving one welded base —
+// the versioned-format shape wowlib welds. For a base carrying the
+// [[=welder::mark::family_surface]] OPT-IN, the render pass hoists the
+// member INTERSECTION onto the base as dispatch members, so base-typed code
+// reads and writes data without a downcast:
 //   - identical spellings hoist with the exact type (scalar, string, the
 //     shared scalar-sequence wrapper);
 //   - a welded member hoists as the member types' common welded base;
 //   - a sequence of welded elements hoists as a FamilyVector<ElementBase>
 //     read view;
 //   - identically-spelled methods hoist as forwarding dispatch;
-//   - a member whose type varies per era stays on the concretes.
+//   - a member whose type varies per era stays on the concretes;
+//   - an UNMARKED base synthesizes NOTHING, however hoistable its family's
+//     intersection is — the opt-in default.
 //
 // #included by gen_family.cpp (the WELDER_CSHARP_MAIN generator) after the
 // welder vocabulary, and by the generated shim.cpp.
@@ -27,6 +30,7 @@ namespace family_ns {
 // the outer family's `gadget` / `gadgets` members have a base to hoist to.
 struct
 [[=welder::weld]]
+[[=welder::mark::family_surface]]
 GadgetBase {};
 
 template <int V>
@@ -41,6 +45,7 @@ using GadgetV2 = Gadget<2>;
 
 struct
 [[=welder::weld]]
+[[=welder::mark::family_surface]]
 WidgetBase {};
 
 template <int V>
@@ -67,5 +72,22 @@ Widget : WidgetBase {
 };
 using WidgetV1 = Widget<1>;
 using WidgetV2 = Widget<2>;
+
+// The opt-in default: NO family_surface mark, so although this family's
+// intersection is perfectly hoistable, the rod must synthesize nothing —
+// UnmarkedBase stays the bare handle-only base it always was.
+struct
+[[=welder::weld]]
+UnmarkedBase {};
+
+template <int V>
+struct
+[[=welder::weld]]
+Unmarked : UnmarkedBase {
+    int shared_scalar{V};
+    int era() const { return V; }
+};
+using UnmarkedV1 = Unmarked<1>;
+using UnmarkedV2 = Unmarked<2>;
 
 } // namespace family_ns

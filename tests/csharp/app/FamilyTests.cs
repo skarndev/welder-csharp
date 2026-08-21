@@ -1,10 +1,12 @@
-// Family-surface round-trip (options::family_surface): base-typed data access
-// over welded per-era instantiations sharing a welded base — the surface
-// tests/csharp/cpp/family.hpp welds. What the synthesized dispatch members
-// must prove: exact-type hoists read AND write, welded members hoist as the
-// family base (live views included), welded sequences hoist as a
-// FamilyVector<Base> live view, methods forward, era-gated members stay on
-// the concretes, and a bare base instance throws from the default arm.
+// Family-surface round-trip: base-typed data access over welded per-era
+// instantiations sharing a welded base MARKED with
+// [[=welder::mark::family_surface]] — the surface tests/csharp/cpp/family.hpp
+// welds. What the synthesized dispatch members must prove: exact-type hoists
+// read AND write, welded members hoist as the family base (live views
+// included), welded sequences hoist as a FamilyVector<Base> live view,
+// methods forward, era-gated members stay on the concretes, a bare base
+// instance throws from the default arm — and an UNMARKED base synthesizes
+// nothing, however hoistable its family's intersection is.
 using System;
 using Xunit;
 using family_ns;
@@ -92,6 +94,19 @@ public class FamilyTests
         if (b is WidgetV1 v1)            // the pattern-matching story
             v1.EraGated = 42;
         Assert.Equal(42, w.EraGated);
+    }
+
+    [Fact]
+    public void UnmarkedBaseSynthesizesNothing()
+    {
+        // The Unmarked family's intersection (SharedScalar, Era) is perfectly
+        // hoistable — but its base carries no family_surface mark, so the rod
+        // must leave it the bare handle-only base it always was.
+        Assert.Null(typeof(UnmarkedBase).GetProperty("SharedScalar"));
+        Assert.Null(typeof(UnmarkedBase).GetMethod("Era"));
+        Assert.NotNull(typeof(UnmarkedV1).GetProperty("SharedScalar"));
+        // The marked bases DID synthesize (the positive control).
+        Assert.NotNull(typeof(WidgetBase).GetProperty("SharedScalar"));
     }
 
     [Fact]

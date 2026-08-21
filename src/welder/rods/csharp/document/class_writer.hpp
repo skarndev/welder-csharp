@@ -87,10 +87,13 @@ struct class_writer {
     std::vector<std::string> surface_names{};
     std::vector<std::string> nested_names{};
     std::string members{};        /**< Accumulated property/method/ctor text. */
-    /** The member manifest the family-surface synthesis intersects
-        (@ref options::family_surface) — recorded by the field/method
-        emitters beside their emissions, flushed into
-        @ref document::family_records with the class's identities. */
+    /** Whether this class carries the `[[=welder::mark::family_surface]]`
+        opt-in (covering this rod's language) — the render-time family
+        synthesis hoists onto a base ONLY when the base is marked. */
+    bool family_marked{false};
+    /** The member manifest the family-surface synthesis intersects —
+        recorded by the field/method emitters beside their emissions, flushed
+        into @ref document::family_records with the class's identities. */
     std::vector<family_member> family_members{};
 
     /** One recorded comparison-operator emission, held back until flush: C#
@@ -135,6 +138,7 @@ struct class_writer {
         surface_names = std::move(o.surface_names);
         nested_names = std::move(o.nested_names);
         members = std::move(o.members);
+        family_marked = o.family_marked;
         family_members = std::move(o.family_members);
         comparisons = std::move(o.comparisons);
         indexer_sigs = std::move(o.indexer_sigs);
@@ -362,12 +366,13 @@ struct class_writer {
         if (!sink)
             doc->section(cs_ns).breaks.push_back(out.size());
         // The class's family manifest, for the render-time family-surface
-        // synthesis (options::family_surface).
-        if (doc->opts.family_surface)
-            doc->family_records.push_back(
-                {cs_path, cs_ns, cs_name, base_ref, sink != nullptr,
-                 std::move(surface_names), std::move(nested_names),
-                 std::move(family_members)});
+        // synthesis (the [[=welder::mark::family_surface]] opt-in). Every
+        // class records one — an unmarked class's manifest still resolves
+        // member types when it appears INSIDE a marked family's members.
+        doc->family_records.push_back(
+            {cs_path, cs_ns, cs_name, base_ref, sink != nullptr,
+             family_marked, std::move(surface_names), std::move(nested_names),
+             std::move(family_members)});
     }
 };
 

@@ -55,8 +55,7 @@ class field_emitter {
     template <std::meta::info Mem, class Style = ::welder::naming::none>
     void emit_field() {
         constexpr std::meta::info MT{std::meta::type_of(Mem)};
-        if (_writer.doc->opts.family_surface)
-            record_family_field<Mem, Style>();
+        record_family_field<Mem, Style>();
         // A non-const SCALAR/ENUM sequence member is a LIVE object, so it
         // binds by reference like its welded-element siblings — a generated
         // wrapper with live element access and a zero-copy AsSpan() — never a
@@ -169,7 +168,7 @@ class field_emitter {
             std::meta::remove_cvref(std::meta::return_type_of(Getter))};
         constexpr bool checked{(require_marshallable(RT, true), true)};
         static_assert(checked);
-        if (_writer.doc->opts.family_surface) {
+        {
             constexpr bool has_setter{Setter != std::meta::info{}};
             family_member fm{};
             fm.name = name;
@@ -244,10 +243,11 @@ class field_emitter {
         return {};
     }
 
-    /** Record data member @a Mem into the class's family manifest
-        (@ref options::family_surface): its resolved C# name, public type
-        spelling, settability and doc — exactly what the render-time family
-        synthesis intersects across a family's concretes.
+    /** Record data member @a Mem into the class's family manifest: its
+        resolved C# name, public type spelling, settability and doc — exactly
+        what the render-time family synthesis intersects across a MARKED
+        family's concretes (an unrelated class's manifest still resolves
+        member types when it appears inside a marked family's members).
         @tparam Mem   a reflection of the data member.
         @tparam Style the name style. */
     template <std::meta::info Mem, class Style>
