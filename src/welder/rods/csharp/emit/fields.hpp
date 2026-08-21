@@ -55,6 +55,7 @@ class field_emitter {
     template <std::meta::info Mem, class Style = ::welder::naming::none>
     void emit_field() {
         constexpr std::meta::info MT{std::meta::type_of(Mem)};
+        record_family_field<Mem, Style>();
         // A non-const SCALAR/ENUM sequence member is a LIVE object, so it
         // binds by reference like its welded-element siblings — a generated
         // wrapper with live element access and a zero-copy AsSpan() — never a
@@ -167,6 +168,18 @@ class field_emitter {
             std::meta::remove_cvref(std::meta::return_type_of(Getter))};
         constexpr bool checked{(require_marshallable(RT, true), true)};
         static_assert(checked);
+        {
+            constexpr bool has_setter{Setter != std::meta::info{}};
+            family_member fm{};
+            fm.name = name;
+            fm.type_str = public_type<RT, ::welder::naming::none>();
+            fm.settable = has_setter;
+            fm.handle_like = classify(RT) == marshal_kind::handle;
+            fm.elem_ref = welded_seq_elem_ref<RT>();
+            if (const char* d{::welder::doc_of<Getter>()}; d && *d)
+                fm.doc = d;
+            _writer.family_members.push_back(std::move(fm));
+        }
         const std::string gid{std::meta::identifier_of(Getter)};
         const std::string glookup{
             "wcs::named_member(" +
@@ -214,6 +227,53 @@ class field_emitter {
     }
 
   private:
+    /** The element's type placeholder when @a MT is a sequence of WELDED
+        elements (the shape the family surface hoists as a
+        `FamilyVector<ElementBase>` view), else empty.
+        @tparam MT the member/return type reflection.
+        @return the element's `\x01raw\x02` reference, or empty. */
+    template <std::meta::info MT>
+    static std::string welded_seq_elem_ref() {
+        if constexpr (classify(MT) == marshal_kind::seq_ref) {
+            constexpr std::meta::info El{
+                std::meta::remove_cvref(sequence_element(bare(MT)))};
+            if constexpr (classify(El) == marshal_kind::handle)
+                return type_ref<bare(El)>();
+        }
+        return {};
+    }
+
+    /** Record data member @a Mem into the class's family manifest: its
+        resolved C# name, public type spelling, settability and doc — exactly
+        what the render-time family synthesis intersects across a MARKED
+        family's concretes (an unrelated class's manifest still resolves
+        member types when it appears inside a marked family's members).
+        @tparam Mem   a reflection of the data member.
+        @tparam Style the name style. */
+    template <std::meta::info Mem, class Style>
+    void record_family_field() {
+        constexpr std::meta::info MT{std::meta::type_of(Mem)};
+        family_member fm{};
+        fm.name = ::welder::name_of<Mem, cs, Style,
+                                    ::welder::ent_kind::field>();
+        if constexpr (classify(MT) == marshal_kind::seq_value &&
+                      !std::meta::is_const_type(MT)) {
+            // The live-wrapper form emit_scalar_seq binds (its type is the
+            // generated container wrapper, not the by-value T[]).
+            fm.type_str = container_ref<bare(MT)>();
+            fm.settable = !::welder::member_no_reassign(Mem, cs);
+        } else {
+            fm.type_str = public_type<MT, Style>();
+            fm.settable = !(std::meta::is_const_type(MT) ||
+                            ::welder::member_no_reassign(Mem, cs));
+            fm.handle_like = classify(MT) == marshal_kind::handle;
+            fm.elem_ref = welded_seq_elem_ref<MT>();
+        }
+        if (const char* d{::welder::doc_of<Mem>()}; d && *d)
+            fm.doc = d;
+        _writer.family_members.push_back(std::move(fm));
+    }
+
     /** The bespoke per-member setter (thunk + P/Invoke): the member's own
         `operator=` spliced through `field_set`. Shared by the bespoke path
         and by the erased path's handle-like members, whose GETTER erases to

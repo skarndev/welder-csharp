@@ -125,6 +125,16 @@ welder_csharp_generate_bindings(welder_test_cs_namespace
   OUTPUT_DIR ${_ws}/namespace
   DEPENDS ${WELDER_TEST_COMMON_CPP}/namespace.hpp)
 
+# The version-family synthesis: per-era template instantiations sharing a
+# welded base marked [[=welder::rods::csharp::family_surface]] gain dispatch
+# members ON the base (an unmarked base gains nothing — the opt-in default).
+welder_csharp_generate_bindings(welder_test_cs_family
+  SOURCES cpp/gen_family.cpp
+  LIBRARY welder_test_cs_family
+  INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+  OUTPUT_DIR ${_ws}/family
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpp/family.hpp)
+
 # Building the targets both regenerates the artifacts and compiles the shims —
 # the compile IS a test (the generated splices must re-derive every member).
 add_test(NAME csharp.build
@@ -136,6 +146,7 @@ add_test(NAME csharp.build
                   welder_test_cs_enums welder_test_cs_overloads
                   welder_test_cs_properties welder_test_cs_naming
                   welder_test_cs_nested welder_test_cs_namespace
+                  welder_test_cs_family
           --config $<CONFIG>)
 set_tests_properties(csharp.build PROPERTIES FIXTURES_SETUP csharp_native)
 
@@ -222,6 +233,8 @@ file(GENERATE OUTPUT ${_app}/app.csproj CONTENT
     <Compile Include=\"${_ws}/naming/Bindings.cs\" />
     <Compile Include=\"${_ws}/nested/Bindings.cs\" />
     <Compile Include=\"${_ws}/namespace/Bindings.cs\" />
+    <Compile Include=\"${_ws}/family/Bindings.cs\" />
+    <Compile Include=\"${CMAKE_CURRENT_SOURCE_DIR}/app/FamilyTests.cs\" />
     <None Include=\"$<TARGET_FILE:welder_test_csharp>\" CopyToOutputDirectory=\"PreserveNewest\" />
     <None Include=\"$<TARGET_FILE:welder_test_cs_retpolicy>\" CopyToOutputDirectory=\"PreserveNewest\" />
     <None Include=\"$<TARGET_FILE:welder_test_cs_operators>\" CopyToOutputDirectory=\"PreserveNewest\" />
@@ -237,6 +250,7 @@ file(GENERATE OUTPUT ${_app}/app.csproj CONTENT
     <None Include=\"$<TARGET_FILE:welder_test_cs_naming>\" CopyToOutputDirectory=\"PreserveNewest\" />
     <None Include=\"$<TARGET_FILE:welder_test_cs_nested>\" CopyToOutputDirectory=\"PreserveNewest\" />
     <None Include=\"$<TARGET_FILE:welder_test_cs_namespace>\" CopyToOutputDirectory=\"PreserveNewest\" />
+    <None Include=\"$<TARGET_FILE:welder_test_cs_family>\" CopyToOutputDirectory=\"PreserveNewest\" />
   </ItemGroup>
 </Project>
 ")

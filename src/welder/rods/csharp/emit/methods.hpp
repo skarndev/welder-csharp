@@ -103,6 +103,7 @@ class method_emitter {
                     _writer.handle_cs, _writer.handle_field}
                     .emit();
             }
+            record_family_method<fn, Style>();
         }
     }
 
@@ -166,6 +167,31 @@ class method_emitter {
     }
 
   private:
+    /** Record overload @a Fn into the class's family manifest: the group's
+        resolved C# name, the public parameter list and return spelling, and
+        the forwarding argument names — what the render-time family synthesis
+        needs to hoist an identically-spelled overload onto a MARKED family
+        base as a dispatch method.
+        @tparam Fn    a reflection of the member function.
+        @tparam Style the name style. */
+    template <std::meta::info Fn, class Style>
+    void record_family_method() {
+        constexpr std::size_t n{std::meta::parameters_of(Fn).size()};
+        const call_pieces cp{
+            build_params<Fn, Style>(std::make_index_sequence<n>{})};
+        family_member fm{};
+        fm.method = true;
+        fm.name = _group_name;
+        fm.ret_str =
+            public_return_type<std::meta::return_type_of(Fn), Style>();
+        fm.params_decl = cp.wrapper_params;
+        for (const std::string& p : split_param_names(cp.param_names))
+            fm.args += (fm.args.empty() ? "" : ", ") + p;
+        if (const char* d{::welder::doc_of<Fn>()}; d && *d)
+            fm.doc = d;
+        _writer.family_members.push_back(std::move(fm));
+    }
+
     /** Emit virtual slot @a Fn: the ordinary (virtual-dispatch) thunk, a
         qualified base-call thunk, P/Invokes for both, and one `public virtual`
         wrapper branching on `_isDirector`. The slot's C# name was already
