@@ -87,9 +87,9 @@ struct class_writer {
     std::vector<std::string> surface_names{};
     std::vector<std::string> nested_names{};
     std::string members{};        /**< Accumulated property/method/ctor text. */
-    /** Whether this class carries the `[[=welder::mark::family_surface]]`
-        opt-in (covering this rod's language) — the render-time family
-        synthesis hoists onto a base ONLY when the base is marked. */
+    /** Whether this class carries the rod's
+        `[[=welder::rods::csharp::family_surface]]` opt-in — the render-time
+        family synthesis hoists onto a base ONLY when the base is marked. */
     bool family_marked{false};
     /** The member manifest the family-surface synthesis intersects —
         recorded by the field/method emitters beside their emissions, flushed
@@ -366,7 +366,7 @@ struct class_writer {
         if (!sink)
             doc->section(cs_ns).breaks.push_back(out.size());
         // The class's family manifest, for the render-time family-surface
-        // synthesis (the [[=welder::mark::family_surface]] opt-in). Every
+        // synthesis ([[=welder::rods::csharp::family_surface]]). Every
         // class records one — an unmarked class's manifest still resolves
         // member types when it appears INSIDE a marked family's members.
         doc->family_records.push_back(

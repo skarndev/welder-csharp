@@ -29,9 +29,7 @@ if(NOT TARGET welder::headers)
   include(FetchContent)
   FetchContent_Declare(welder
     GIT_REPOSITORY https://github.com/skarndev/welder.git
-    # The family_surface mark (skarndev/welder#3) - restore `main` once it
-    # lands there.
-    GIT_TAG 0d13458d2a808f62ce39f63e1275f10afa56218d)
+    GIT_TAG main)
   FetchContent_MakeAvailable(welder)
 endif()
 

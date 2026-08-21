@@ -103,8 +103,9 @@ struct ns_section {
 };
 
 /** One bound member of a welded class, as the family-surface synthesis needs
-    it (the `[[=welder::mark::family_surface]]` opt-in): the C# spellings the
-    emitters resolved, recorded beside the emission so the render-time pass
+    it (the `[[=welder::rods::csharp::family_surface]]` opt-in): the C#
+    spellings the emitters resolved, recorded beside the emission so the
+    render-time pass
     can intersect a family's surfaces without re-deriving anything from
     reflection. Type spellings may carry the render-time reference
     placeholders — they compare exactly (same C++ type ⇒ same placeholder)
@@ -186,7 +187,7 @@ struct document {
     /** Every flushed class's family manifest: the render pass groups them by
         resolved first-welded-base and synthesizes a version-agnostic base
         surface for each family whose base carries the
-        `[[=welder::mark::family_surface]]` opt-in. */
+        `[[=welder::rods::csharp::family_surface]]` opt-in. */
     std::vector<family_record> family_records{};
     std::string containers{};   /**< Generated container-wrapper classes (root ns). */
     std::vector<std::string> container_keys{}; /**< Dedup (one wrapper per type). */
@@ -562,8 +563,8 @@ struct document {
 
     /** Synthesize the version-agnostic family surfaces. A FAMILY is two or
         more top-level welded classes sharing one welded base; a family whose
-        base carries the `[[=welder::mark::family_surface]]` opt-in (covering
-        this rod's language) gains a `partial class` block ON the base holding
+        base carries the rod's `[[=welder::rods::csharp::family_surface]]`
+        opt-in gains a `partial class` block ON the base holding
         the member INTERSECTION the concretes bind identically, each member a
         dispatch on the concrete class. The mark is strictly required —
         synthesizing members onto a base is too intrusive to infer from

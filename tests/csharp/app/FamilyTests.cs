@@ -1,7 +1,8 @@
 // Family-surface round-trip: base-typed data access over welded per-era
 // instantiations sharing a welded base MARKED with
-// [[=welder::mark::family_surface]] — the surface tests/csharp/cpp/family.hpp
-// welds. What the synthesized dispatch members must prove: exact-type hoists
+// [[=welder::rods::csharp::family_surface]] (the rod's own mark) — the
+// surface tests/csharp/cpp/family.hpp welds. What the synthesized dispatch
+// members must prove: exact-type hoists
 // read AND write, welded members hoist as the family base (live views
 // included), welded sequences hoist as a FamilyVector<Base> live view,
 // methods forward, era-gated members stay on the concretes, a bare base

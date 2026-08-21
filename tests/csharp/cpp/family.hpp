@@ -2,7 +2,8 @@
 // Version-FAMILY synthesis: a class template welded per "era" through
 // namespace-scope aliases, every instantiation deriving one welded base —
 // the versioned-format shape wowlib welds. For a base carrying the
-// [[=welder::mark::family_surface]] OPT-IN, the render pass hoists the
+// [[=welder::rods::csharp::family_surface]] OPT-IN (the rod's own mark,
+// <welder/rods/csharp/marks.hpp>), the render pass hoists the
 // member INTERSECTION onto the base as dispatch members, so base-typed code
 // reads and writes data without a downcast:
 //   - identical spellings hoist with the exact type (scalar, string, the
@@ -18,6 +19,7 @@
 // #included by gen_family.cpp (the WELDER_CSHARP_MAIN generator) after the
 // welder vocabulary, and by the generated shim.cpp.
 #include <welder/rods/csharp/lang.hpp>
+#include <welder/rods/csharp/marks.hpp>
 #include <cstdint>
 #include <string>
 #include <type_traits>
@@ -30,7 +32,7 @@ namespace family_ns {
 // the outer family's `gadget` / `gadgets` members have a base to hoist to.
 struct
 [[=welder::weld]]
-[[=welder::mark::family_surface]]
+[[=welder::rods::csharp::family_surface]]
 GadgetBase {};
 
 template <int V>
@@ -45,7 +47,7 @@ using GadgetV2 = Gadget<2>;
 
 struct
 [[=welder::weld]]
-[[=welder::mark::family_surface]]
+[[=welder::rods::csharp::family_surface]]
 WidgetBase {};
 
 template <int V>

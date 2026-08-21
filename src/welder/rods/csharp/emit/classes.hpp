@@ -3,10 +3,9 @@
 #include <meta>
 #include <string>
 
-#include <welder/reflect.hpp> // family_surface_for
 #include <welder/rods/csharp/directors.hpp>
 #include <welder/rods/csharp/document.hpp>
-#include <welder/rods/csharp/lang.hpp>
+#include <welder/rods/csharp/marks.hpp>
 #include <welder/rods/csharp/emit/directors.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/spellings.hpp>
@@ -124,13 +123,12 @@ class class_opener {
         w.handle_field = "_h_" + sanitized(w.cs_path);
         w.handle_cs = w.cs_path + "Handle";
         w.destroy_symbol = w.sym_prefix + "_destroy";
-        // The family-surface OPT-IN: only a base carrying
-        // [[=welder::mark::family_surface]] (covering this rod's language)
-        // has a version-agnostic surface synthesized onto it — synthesizing
+        // The family-surface OPT-IN: only a base carrying the rod's own
+        // [[=welder::rods::csharp::family_surface]] mark has a
+        // version-agnostic surface synthesized onto it — synthesizing
         // members onto a base is too intrusive to infer from structure alone.
         {
-            constexpr bool fm{::welder::family_surface_for(
-                std::meta::dealias(^^T), cs)};
+            constexpr bool fm{family_surface_marked(std::meta::dealias(^^T))};
             w.family_marked = fm;
         }
         finish<T, Bases>(w);
