@@ -28,12 +28,22 @@
 
 namespace family_ns {
 
+// The GRANDPARENT root: a marked base whose children are the FAMILY BASES
+// below. The multi-level synthesis appends each family's synthesized members
+// to its base's manifest and processes deepest families first, so this root
+// hoists the contract its child families END UP sharing (Span() below) —
+// the shape a consumer's common file-entity root wants.
+struct
+[[=welder::weld]]
+[[=welder::rods::csharp::family_surface]]
+EntityRoot {};
+
 // The nested entity's own family: a welded base + per-era instantiations, so
 // the outer family's `gadget` / `gadgets` members have a base to hoist to.
 struct
 [[=welder::weld]]
 [[=welder::rods::csharp::family_surface]]
-GadgetBase {};
+GadgetBase : EntityRoot {};
 
 template <int V>
 struct
@@ -41,6 +51,8 @@ struct
 Gadget : GadgetBase {
     [[=welder::doc("The gadget's power rating.")]]
     int power{V};
+
+    int span() const { return V; }
 };
 using GadgetV1 = Gadget<1>;
 using GadgetV2 = Gadget<2>;
@@ -48,7 +60,7 @@ using GadgetV2 = Gadget<2>;
 struct
 [[=welder::weld]]
 [[=welder::rods::csharp::family_surface]]
-WidgetBase {};
+WidgetBase : EntityRoot {};
 
 template <int V>
 struct
@@ -71,6 +83,7 @@ Widget : WidgetBase {
     [[=welder::doc("The era this instantiation is.")]]
     int era() const { return V; }
     int scaled(int k) const { return V * k; }
+    int span() const { return V * 10; }
 };
 using WidgetV1 = Widget<1>;
 using WidgetV2 = Widget<2>;

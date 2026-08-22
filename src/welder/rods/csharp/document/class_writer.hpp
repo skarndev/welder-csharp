@@ -351,6 +351,17 @@ struct class_writer {
                             cs_path, n, cs_path, n);
             w.raw(members);
             w.raw(flush_comparisons());
+            // Dispose is DETERMINISTIC release, not the only release: the
+            // SafeHandle's critical finalizer frees the native object when
+            // the wrapper is collected, so skipping Dispose leaks nothing
+            // permanently — `using` is for releasing native memory promptly
+            // (the GC cannot feel native memory pressure). Say so on every
+            // wrapper, where the reader is.
+            w.line("/// <summary>Release the native object now. Optional: "
+                   "the finalizer releases it on\n"
+                   "        /// collection anyway - dispose (or `using`) "
+                   "when you want native memory back\n"
+                   "        /// promptly.</summary>");
             if (base_ref.empty())
                 w.line("public virtual void Dispose() => {}.Dispose();",
                        handle_field);

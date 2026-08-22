@@ -31,10 +31,10 @@ public class BindingTests
         using (var t = p.Translated(1, 1))
             Assert.True(t.X == 13 && t.Y == 7 && p.X == 12,
                         "welded return is a copy");
-        using (var c = p.Clone())
+        using (var c = new Point(p))                 // the copy constructor
         {
             c.Offset(1);
-            Assert.True(c.X == 13 && p.X == 12, "Clone is a copy");
+            Assert.True(c.X == 13 && p.X == 12, "copy construction is a copy");
         }
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => p.Explode());
         Assert.Equal("boom", ex.Message); // std::out_of_range mapping
@@ -458,24 +458,27 @@ public class BindingTests
         }
     }
 
+    private static bool HasCopyCtor(Type t) =>
+        t.GetConstructor(new[] { t }) != null;
+
     [Fact]
     public void CopyingShared()
     {
         using (var sheet = new copying.Sheet())
         {
             sheet.Width = 5;
-            using (var c = sheet.Clone())
+            using (var c = new copying.Sheet(sheet))
                 Assert.Equal(5, c.Width); // implicit copy ctor rides along
         }
-        // deleted / excluded copy ctor -> no Clone() surface at all
-        Assert.Null(typeof(copying.Pinned).GetMethod("Clone"));
-        Assert.Null(typeof(copying.Sealed).GetMethod("Clone"));
-        // ...but a PY-scoped exclude leaves cs's Clone intact
-        Assert.NotNull(typeof(copying.PyBlocked).GetMethod("Clone"));
+        // deleted / excluded copy ctor -> no copy-constructor surface at all
+        Assert.False(HasCopyCtor(typeof(copying.Pinned)));
+        Assert.False(HasCopyCtor(typeof(copying.Sealed)));
+        // ...but a PY-scoped exclude leaves cs's copy constructor intact
+        Assert.True(HasCopyCtor(typeof(copying.PyBlocked)));
         using (var ch = new copying.Choosy())
-            using (var c = ch.Clone())
+            using (var c = new copying.Choosy(ch))
                 Assert.Equal(3, c.Chosen); // opt_in keeps a declared copy ctor
-        Assert.NotNull(typeof(copying.Shifty).GetMethod("Clone")); // move ctor skipped
+        Assert.True(HasCopyCtor(typeof(copying.Shifty))); // move ctor skipped
     }
 
     [Fact]
