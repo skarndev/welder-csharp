@@ -575,8 +575,9 @@ struct document {
         - a property typed as a welded class hoists as the member types'
           common welded base — the getter upcasts, the setter downcasts (an
           `InvalidCastException` names a wrong-era assignment);
-        - a property over a sequence of welded elements hoists as a read-only
-          `FamilyVector<ElementBase>` live view over the concrete's wrapper;
+        - a property over a sequence of welded elements hoists as a
+          `FamilyVector<ElementBase>` live view over the concrete's wrapper
+          (indexer get and version-checked set; no size-changing ops);
         - a method overload whose parameter list and return type spell the
           same on every concrete hoists as a forwarding dispatch.
 
@@ -760,7 +761,9 @@ struct document {
                                 ";\n                        return new "
                                 "FamilyVector<" +
                                 elem_base +
-                                ">(() => _s.Count, _k => _s[_k]);\n"
+                                ">(() => _s.Count, _k => _s[_k], "
+                                "(_k, _v) => _s[_k] = (" +
+                                ms[i]->elem_ref + ")_v);\n"
                                 "                    }\n";
                     }
                 }
@@ -803,27 +806,62 @@ struct document {
         return out;
     }
 
-    /** The `FamilyVector<T>` support type — the read-only, base-typed live
-        view the synthesized sequence properties return. Rendered once, with
-        the generated container wrappers, when any family hoisted a sequence
+    /** The `FamilyVector<T>` support type — the base-typed live view the
+        synthesized sequence properties return. Rendered once, with the
+        generated container wrappers, when any family hoisted a sequence
         member. @return the class text, at namespace depth. */
     static std::string _family_vector_support() {
         return
-            "    /// <summary>A read-only live view over a per-era sequence "
-            "member, element-typed as the\n"
-            "    /// family base: the version-agnostic spelling of a welded "
-            "family's vector and\n"
-            "    /// fixed-array members. Count and the indexer read through "
-            "to the underlying\n"
-            "    /// native container; foreach is duck-typed.</summary>\n"
+            "    /// <summary>The version-agnostic view of a welded family's "
+            "SEQUENCE member — a\n"
+            "    /// vector or fixed array whose elements are per-version "
+            "welded classes —\n"
+            "    /// element-typed as the element's own family base. It is "
+            "what lets base-typed\n"
+            "    /// code walk such a member without naming a version: Count "
+            "and the indexer\n"
+            "    /// read through to the concrete version's native container "
+            "LIVE (no copy;\n"
+            "    /// mutating an element view writes through), and the "
+            "indexer's setter\n"
+            "    /// version-checks the assigned element — a wrong-version "
+            "element throws\n"
+            "    /// InvalidCastException, the same contract as the family "
+            "surface's\n"
+            "    /// single-member setters. Size-changing operations are "
+            "deliberately absent:\n"
+            "    /// a fixed-array member has none at all, and growing a "
+            "vector takes\n"
+            "    /// version-specific elements anyway — pattern-match to the "
+            "concrete class\n"
+            "    /// and use its own member for Add/Clear. foreach is "
+            "supported (the nested\n"
+            "    /// Enumerator is the standard allocation-free "
+            "pattern).</summary>\n"
             "    public sealed class FamilyVector<T> where T : class\n"
             "    {\n"
             "        private readonly Func<int> _count;\n"
             "        private readonly Func<int, T> _get;\n"
-            "        public FamilyVector(Func<int> count, Func<int, T> get) "
-            "{ _count = count; _get = get; }\n"
+            "        private readonly Action<int, T>? _set;\n"
+            "        public FamilyVector(Func<int> count, Func<int, T> get, "
+            "Action<int, T>? set = null)\n"
+            "        {\n"
+            "            _count = count;\n"
+            "            _get = get;\n"
+            "            _set = set;\n"
+            "        }\n"
             "        public int Count => _count();\n"
-            "        public T this[int i] => _get(i);\n"
+            "        public T this[int i]\n"
+            "        {\n"
+            "            get => _get(i);\n"
+            "            set\n"
+            "            {\n"
+            "                if (_set == null)\n"
+            "                    throw new InvalidOperationException("
+            "\"this family view is read-only\");\n"
+            "                _set(i, value);\n"
+            "            }\n"
+            "        }\n"
             "        public Enumerator GetEnumerator() => new "
             "Enumerator(this);\n"
             "        /// <summary>Duck-typed foreach support.</summary>\n"
