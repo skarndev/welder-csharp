@@ -389,8 +389,9 @@ struct rod {
 
     // --- multi-TU generation ------------------------------------------------
     // The document is RUNTIME state: reflection is per-TU, but nothing requires
-    // all of it to happen in ONE TU. A large surface (wowlib: ~1200 generated
-    // tables) makes the single generate TU a memory wall — begin_document /
+    // all of it to happen in ONE TU. A large surface (a consumer welding
+    // ~1200 generated record classes, measured) makes the single generate TU
+    // a memory wall — begin_document /
     // at() / contribute_namespace() / render_files() let the surface be split
     // across TUs that LINK into one generator executable and append into one
     // document, so the compile peak is max(TU), not sum, and the TUs compile in
@@ -409,7 +410,7 @@ struct rod {
 
     /** A module handle at dotted C# namespace @a cs_ns below the root
         (`""` = the root): the hook a contributor TU welds its slice through —
-        `W::weld_type<T>(rod::at(doc, "Db.Tables"), "MapWotlk")`. */
+        `W::weld_type<T>(rod::at(doc, "Db.Tables"), "RecordV2")`. */
     static module_type at(document& doc, std::string cs_ns) {
         return module_type{&doc, std::move(cs_ns)};
     }

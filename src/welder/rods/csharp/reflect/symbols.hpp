@@ -98,8 +98,8 @@ consteval bool spellable(std::meta::info ent) {
     an identifier, and a class-template **specialization** has none — so every
     specialization declared in one namespace collapses onto the same token, and
     the container/shared-ptr thunks built from it become duplicate C symbols
-    (`std::vector<MapChunk<vanilla>>` and `std::vector<MapChunk<wotlk>>` both
-    landed on `welder_vec_..._adt_detail_*`). For an unspellable entity the
+    (`std::vector<Cell<v1>>` and `std::vector<Cell<v2>>` both landed on
+    `welder_vec_..._grid_detail_*`). For an unspellable entity the
     display string is used instead — it spells the template arguments, so it
     distinguishes the specializations — sanitized to identifier characters.
     Spellable entities keep the readable underscore path unchanged.

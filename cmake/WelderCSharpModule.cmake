@@ -110,8 +110,9 @@ function(welder_csharp_generate_bindings name)
 
   # PREGENERATED_DIR: skip steps 1 and 2 entirely and compile shim sources that
   # were generated elsewhere. The generator is ONE reflection-heavy TU — on a
-  # large surface it can dominate the whole build (measured on wowlib: 40
-  # minutes, serial, against ~8 minutes for the worst shim shard) — and its
+  # large surface it can dominate the whole build (measured on a large
+  # consumer surface: 40 minutes, serial, against ~8 minutes for the worst
+  # shim shard) — and its
   # output is PLATFORM-INDEPENDENT text: same reflection, same header, same
   # bytes. A cross-platform build can therefore generate once and compile the
   # result everywhere, which is what this exists for. The caller is responsible

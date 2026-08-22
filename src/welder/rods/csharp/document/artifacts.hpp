@@ -74,8 +74,8 @@ struct options {
         artifact, byte for byte). */
     bool erased_fields{true};
     /** C# namespace RENAMES, keyed by the dotted path the name style would
-        derive (`"Formats.Wmo"`), valued with the full replacement path
-        (`"Formats.WMO"`). Applied by `add_submodule` as the walk descends, so
+        derive (`"Net.Tcp"`), valued with the full replacement path
+        (`"Net.TCP"`). Applied by `add_submodule` as the walk descends, so
         a renamed namespace's children derive from the REPLACED path
         automatically. The C++ side cannot carry this itself: a namespace's
         C# spelling may be a cased acronym the style cannot infer, and gcc-16

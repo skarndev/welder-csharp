@@ -1,7 +1,7 @@
 #pragma once
 // Version-FAMILY synthesis: a class template welded per "era" through
 // namespace-scope aliases, every instantiation deriving one welded base —
-// the versioned-format shape wowlib welds. For a base carrying the
+// the shape a version-parametric consumer surface welds. For a base carrying the
 // [[=welder::rods::csharp::family_surface]] OPT-IN (the rod's own mark,
 // <welder/rods/csharp/marks.hpp>), the render pass hoists the
 // member INTERSECTION onto the base as dispatch members, so base-typed code
