@@ -294,13 +294,23 @@ struct rod {
     }
 
     /** A nested C++ namespace = a REAL nested C# namespace: extend the dotted
-        path; the submodule's types and `Global` members land there.
+        path; the submodule's types and `Global` members land there. The
+        derived path is checked against @ref options::namespace_renames — the
+        consumer's spelling override for names the style cannot infer (cased
+        acronyms) — and a match substitutes the full replacement path, so a
+        renamed namespace's children chain off the replacement.
         @param m    the enclosing module handle.
         @param name the nested namespace's C# name.
         @return the submodule handle. */
     static module_type add_submodule(module_type& m, const char* name) {
-        return module_type{m.doc, m.cs_ns.empty() ? std::string{name}
-                                                  : m.cs_ns + "." + name};
+        std::string path{m.cs_ns.empty() ? std::string{name}
+                                         : m.cs_ns + "." + name};
+        for (const auto& [from, to] : m.doc->opts.namespace_renames)
+            if (from == path) {
+                path = to;
+                break;
+            }
+        return module_type{m.doc, std::move(path)};
     }
 
     /** Nothing to close — the document is rendered by @ref generate. */
