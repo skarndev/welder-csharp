@@ -468,7 +468,8 @@ public class BindingTests
                 entries.Add(e);
 
         // ONE interop crossing for the whole buffer; reads see native state.
-        var span = entries.AsSpan<VertexEntry.Data>();
+        // (AsDataSpan() is the generated sugar for AsSpan<VertexEntry.Data>().)
+        var span = entries.AsDataSpan();
         Assert.Equal(3, span.Length);
         span[1].Tag = 7;                       // writes go straight to native
         span[1].Normal[2] = -5;                // fixed buffer = the C++ array

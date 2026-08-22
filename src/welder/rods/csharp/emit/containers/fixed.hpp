@@ -172,6 +172,22 @@ class fixed_wrapper_emitter {
             }
         }
         w.blank();
+        // The typed bulk-span sugar (see the vector emitter's note).
+        if (_elem_size != 0) {
+            w.line("public static partial class SpanExtensions");
+            {
+                const auto cls{w.braces()};
+                w.line("/// <summary>Zero-copy span of {}.Data over the "
+                       "array's native storage — one interop\n"
+                       "        /// crossing for the whole record buffer; "
+                       "writable; valid until Dispose.</summary>",
+                       _element_ref);
+                w.line("public static Span<{}.Data> AsDataSpan(this "
+                       "FixedArray<{}> a) => a.AsSpan<{}.Data>();",
+                       _element_ref, _element_ref, _element_ref);
+            }
+            w.blank();
+        }
     }
 
     document* _doc; /**< The shared document. */
