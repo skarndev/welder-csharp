@@ -44,6 +44,59 @@ struct welder_dir_csharp_cases_Shape final : ::csharp_cases::Shape {
 
 extern "C" {
 
+static_assert(std::meta::size_of(^^::csharp_cases::VertexEntry) == 4, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::VertexEntry :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::VertexEntry, "tag")).bytes == 0, "welder: Data-mirror offset drift: tag");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::VertexEntry, "normal")).bytes == 1, "welder: Data-mirror offset drift: normal");
+
+void welder_csharp_cases_VertexEntry_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::VertexEntry>(self); }
+
+void* welder_csharp_cases_VertexEntry_new_default(welder_error* err) { return wcs::shim::default_construct<^^::csharp_cases::VertexEntry>(err); }
+
+void* welder_csharp_cases_VertexEntry_new_agg(std::int8_t a0, welder_seq_wire a1, welder_error* err) { return wcs::shim::aggregate_construct<^^::csharp_cases::VertexEntry>(err, a0, a1); }
+
+void* welder_csharp_cases_VertexEntry_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::VertexEntry>(self, err); }
+
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::VertexEntry>(0) == 0, "welder: erased-field offset drift: tag");
+
+void* welder_arrs_sbyte_3_new(welder_error* err) { return wcs::shim::arr_new<^^signed char, 3>(err); }
+
+void welder_arrs_sbyte_3_destroy(void* self) { wcs::shim::arr_destroy<^^signed char, 3>(self); }
+
+void* welder_arrs_sbyte_3_data(void* self, welder_error* err) { return wcs::shim::arr_data<^^signed char, 3>(self, err); }
+
+void welder_arrs_sbyte_3_fill(void* self, const void* data, std::int64_t len, welder_error* err) { wcs::shim::arr_fill<^^signed char, 3>(self, data, len, err); }
+
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::VertexEntry>(1) == 1, "welder: erased-field offset drift: normal");
+
+void welder_csharp_cases_VertexEntry_set_normal(void* self, void* v, welder_error* err) { wcs::shim::field_assign<^^::csharp_cases::VertexEntry, wcs::named_field(^^::csharp_cases::VertexEntry, "normal")>(self, v, err); }
+
+void welder_csharp_cases_VertexSheet_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::VertexSheet>(self); }
+
+void* welder_csharp_cases_VertexSheet_new_default(welder_error* err) { return wcs::shim::default_construct<^^::csharp_cases::VertexSheet>(err); }
+
+void* welder_csharp_cases_VertexSheet_new_agg(void* a0, welder_error* err) { return wcs::shim::aggregate_construct<^^::csharp_cases::VertexSheet>(err, a0); }
+
+void* welder_csharp_cases_VertexSheet_clone(void* self, welder_error* err) { return wcs::shim::clone<^^::csharp_cases::VertexSheet>(self, err); }
+
+void* welder_vec_csharp_cases_VertexEntry_new(welder_error* err) { return wcs::shim::vec_new<^^::csharp_cases::VertexEntry>(err); }
+
+void welder_vec_csharp_cases_VertexEntry_destroy(void* self) { wcs::shim::vec_destroy<^^::csharp_cases::VertexEntry>(self); }
+
+std::int64_t welder_vec_csharp_cases_VertexEntry_size(void* self, welder_error* err) { return wcs::shim::vec_size<^^::csharp_cases::VertexEntry>(self, err); }
+
+void* welder_vec_csharp_cases_VertexEntry_get(void* self, std::int64_t i, welder_error* err) { return wcs::shim::vec_get<^^::csharp_cases::VertexEntry>(self, i, err); }
+
+void welder_vec_csharp_cases_VertexEntry_set(void* self, std::int64_t i, void* elem, welder_error* err) { wcs::shim::vec_set<^^::csharp_cases::VertexEntry>(self, i, elem, err); }
+
+void welder_vec_csharp_cases_VertexEntry_add(void* self, void* elem, welder_error* err) { wcs::shim::vec_add<^^::csharp_cases::VertexEntry>(self, elem, err); }
+
+void welder_vec_csharp_cases_VertexEntry_clear(void* self, welder_error* err) { wcs::shim::vec_clear<^^::csharp_cases::VertexEntry>(self, err); }
+
+static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::VertexSheet>(0) == 0, "welder: erased-field offset drift: entries");
+
+void welder_csharp_cases_VertexSheet_set_entries(void* self, void* v, welder_error* err) { return wcs::shim::field_set<^^::csharp_cases::VertexSheet, wcs::named_field(^^::csharp_cases::VertexSheet, "entries")>(self, err, v); }
+
 void welder_csharp_cases_Point_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Point>(self); }
 
 void* welder_csharp_cases_Point_new_default(welder_error* err) { return wcs::shim::default_construct<^^::csharp_cases::Point>(err); }
@@ -81,6 +134,11 @@ void welder_csharp_cases_Point_pset_Depth(void* self, std::int32_t v, welder_err
 void* welder_csharp_cases_Point_op_plus_b_0(void* self, void* a0, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Point, wcs::named_operator(^^::csharp_cases::Point, std::meta::operators::op_plus, false, 0)>(self, err, a0); }
 
 bool welder_csharp_cases_Point_op_equals_equals_b_0(void* self, void* a0, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Point, wcs::named_operator(^^::csharp_cases::Point, std::meta::operators::op_equals_equals, false, 0)>(self, err, a0); }
+
+static_assert(std::meta::size_of(^^::csharp_cases::Size) == 8, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::Size :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Size, "width")).bytes == 0, "welder: Data-mirror offset drift: width");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Size, "height")).bytes == 4, "welder: Data-mirror offset drift: height");
 
 void welder_csharp_cases_Size_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Size>(self); }
 
@@ -148,6 +206,10 @@ void welder_csharp_cases_v_answer_set(std::int32_t v, welder_error* err) { retur
 
 double welder_csharp_cases_v_golden_get(welder_error* err) { return wcs::shim::var_get<wcs::named_field(^^::csharp_cases, "golden")>(err); }
 
+static_assert(std::meta::size_of(^^::csharp_cases::Animal) == 4, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::Animal :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Animal, "age")).bytes == 0, "welder: Data-mirror offset drift: age");
+
 void welder_csharp_cases_Animal_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Animal>(self); }
 
 void* welder_csharp_cases_Animal_new_default(welder_error* err) { return wcs::shim::default_construct<^^::csharp_cases::Animal>(err); }
@@ -157,6 +219,10 @@ void* welder_csharp_cases_Animal_clone(void* self, welder_error* err) { return w
 static_assert(wcs::shim::nsdm_offset<^^::csharp_cases::Animal>(0) == 0, "welder: erased-field offset drift: age");
 
 const char* welder_csharp_cases_Animal_m_kind_0(void* self, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Animal, wcs::named_member(^^::csharp_cases::Animal, "kind", 0)>(self, err); }
+
+static_assert(std::meta::size_of(^^::csharp_cases::Legged) == 4, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::Legged :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Legged, "legs")).bytes == 0, "welder: Data-mirror offset drift: legs");
 
 void welder_csharp_cases_Legged_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Legged>(self); }
 
@@ -396,7 +462,16 @@ const char* welder_csharp_cases_Shape_m_describe_0(void* self, welder_error* err
 
 const char* welder_csharp_cases_f_describe_shape_0(void* a0, welder_error* err) { return wcs::shim::function<wcs::named_member(^^::csharp_cases, "describe_shape", 0)>(err, a0); }
 
+static_assert(std::meta::size_of(^^::csharp_cases::Machine) == 8, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::Machine :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Machine, "power")).bytes == 0, "welder: Data-mirror offset drift: power");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Machine, "dial")).bytes == 4, "welder: Data-mirror offset drift: dial");
+
 void welder_csharp_cases_Machine_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Machine>(self); }
+
+static_assert(std::meta::size_of(^^::csharp_cases::Machine::Gauge) == 4, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::Machine::Gauge :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::Machine::Gauge, "value")).bytes == 0, "welder: Data-mirror offset drift: value");
 
 void welder_csharp_cases_Machine_Gauge_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::Machine::Gauge>(self); }
 
@@ -529,6 +604,10 @@ welder_seq_wire welder_csharp_cases_Catalog_m_shout_0(void* self, welder_seq_wir
 std::int32_t welder_csharp_cases_Catalog_m_entry_count_0(void* self, welder_error* err) { return wcs::shim::method<^^::csharp_cases::Catalog, wcs::named_member(^^::csharp_cases::Catalog, "entry_count", 0)>(self, err); }
 
 welder_seq_wire welder_csharp_cases_f_split_words_0(const char* a0, welder_error* err) { return wcs::shim::function<wcs::named_member(^^::csharp_cases, "split_words", 0)>(err, a0); }
+
+static_assert(std::meta::size_of(^^::csharp_cases::WoodCrate) == 4, "welder: Data-mirror size drift");
+static_assert(std::is_trivially_copyable_v<typename [: ^^::csharp_cases::WoodCrate :]>, "welder: Data-mirror on a non-trivially-copyable type");
+static_assert(std::meta::offset_of(wcs::named_field(^^::csharp_cases::WoodCrate, "stamped")).bytes == 0, "welder: Data-mirror offset drift: stamped");
 
 void welder_csharp_cases_WoodCrate_destroy(void* self) { wcs::shim::destroy<^^::csharp_cases::WoodCrate>(self); }
 

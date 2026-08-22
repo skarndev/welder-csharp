@@ -114,6 +114,27 @@ namespace csharp_cases
     {
         internal const string Lib = "welder_test_csharp_native";
 
+        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_VertexEntry_destroy(IntPtr self);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexEntry_new_default(out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexEntry_new_agg(sbyte a0, WelderSeqWire a1, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexEntry_clone(VertexEntryHandle self, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_arrs_sbyte_3_new(out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_arrs_sbyte_3_destroy(IntPtr self);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_arrs_sbyte_3_data(WelderContainerHandle self, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_arrs_sbyte_3_fill(WelderContainerHandle self, IntPtr data, long len, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_VertexEntry_set_normal(VertexEntryHandle self, WelderContainerHandle v, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_VertexSheet_destroy(IntPtr self);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexSheet_new_default(out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexSheet_new_agg(WelderContainerHandle a0, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_VertexSheet_clone(VertexSheetHandle self, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_vec_csharp_cases_VertexEntry_new(out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_VertexEntry_destroy(IntPtr self);
+        [LibraryImport(Lib)] internal static partial long welder_vec_csharp_cases_VertexEntry_size(WelderContainerHandle self, out WelderError err);
+        [LibraryImport(Lib)] internal static partial IntPtr welder_vec_csharp_cases_VertexEntry_get(WelderContainerHandle self, long i, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_VertexEntry_set(WelderContainerHandle self, long i, SafeHandle elem, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_VertexEntry_add(WelderContainerHandle self, SafeHandle elem, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_vec_csharp_cases_VertexEntry_clear(WelderContainerHandle self, out WelderError err);
+        [LibraryImport(Lib)] internal static partial void welder_csharp_cases_VertexSheet_set_entries(VertexSheetHandle self, WelderContainerHandle v, out WelderError err);
         [LibraryImport(Lib)] internal static partial void welder_csharp_cases_Point_destroy(IntPtr self);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Point_new_default(out WelderError err);
         [LibraryImport(Lib)] internal static partial IntPtr welder_csharp_cases_Point_new_1(int a0, int a1, out WelderError err);
@@ -364,6 +385,174 @@ namespace csharp_cases
         [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)] internal static partial void welder__field_set_str(SafeHandle self, int off, string v, out WelderError err);
     }
 
+    internal sealed class VertexEntryHandle : SafeHandle
+    {
+        internal VertexEntryHandle(IntPtr handle, bool owns) : base(IntPtr.Zero, owns)
+        {
+            SetHandle(handle);
+        }
+        public override bool IsInvalid => handle == IntPtr.Zero;
+        protected override bool ReleaseHandle()
+        {
+            NativeMethods.welder_csharp_cases_VertexEntry_destroy(handle);
+            return true;
+        }
+    }
+
+    /// <summary>One per-vertex record: a tag byte and a packed 3-component normal.</summary>
+    public partial class VertexEntry : IDisposable
+    {
+        internal VertexEntryHandle _h_VertexEntry;
+        internal object? _owner;
+        internal bool _isDirector;
+        internal VertexEntry(IntPtr handle, bool owns) { _h_VertexEntry = new VertexEntryHandle(handle, owns); }
+
+        /// <summary>A blittable value twin of the NATIVE layout (size 4): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 4)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public sbyte Tag;
+            [FieldOffset(1)] public fixed sbyte Normal[3];
+        }
+
+        private static IntPtr _New_default()
+        {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexEntry_new_default(out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+        }
+        public VertexEntry() : this(_New_default(), true) {}
+
+        private static unsafe IntPtr _New_agg(sbyte tag, sbyte[] normal)
+        {
+            fixed (sbyte* _pin1 = normal) {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexEntry_new_agg(tag, new WelderSeqWire { Data = (IntPtr)_pin1, Len = normal.Length }, out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+            }
+        }
+        public VertexEntry(sbyte tag, sbyte[] normal) : this(_New_agg(tag, normal), true) {}
+
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public VertexEntry(VertexEntry other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(VertexEntry other)
+        {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexEntry_clone(other._h_VertexEntry, out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+        }
+
+        public sbyte Tag
+        {
+            get
+            {
+                var _r = NativeMethods.welder__field_get_sbyte(_h_VertexEntry, 0, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+                return _r;
+            }
+            set
+            {
+                NativeMethods.welder__field_set_sbyte(_h_VertexEntry, 0, value, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+            }
+        }
+
+        public FixedArray<sbyte> Normal
+        {
+            get
+            {
+                IntPtr _r = NativeMethods.welder__field_addr(_h_VertexEntry, 1, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+                var _v = new FixedArray<sbyte>(_r, false, WelderOps_arrs_sbyte_3.Ops);
+                _v._owner = this;
+                return _v;
+            }
+            set
+            {
+                NativeMethods.welder_csharp_cases_VertexEntry_set_normal(_h_VertexEntry, value._h, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+            }
+        }
+
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
+        public virtual void Dispose() => _h_VertexEntry.Dispose();
+    }
+
+    internal sealed class VertexSheetHandle : SafeHandle
+    {
+        internal VertexSheetHandle(IntPtr handle, bool owns) : base(IntPtr.Zero, owns)
+        {
+            SetHandle(handle);
+        }
+        public override bool IsInvalid => handle == IntPtr.Zero;
+        protected override bool ReleaseHandle()
+        {
+            NativeMethods.welder_csharp_cases_VertexSheet_destroy(handle);
+            return true;
+        }
+    }
+
+    /// <summary>A vertex buffer: the vector of records the bulk span reinterprets.</summary>
+    public partial class VertexSheet : IDisposable
+    {
+        internal VertexSheetHandle _h_VertexSheet;
+        internal object? _owner;
+        internal bool _isDirector;
+        internal VertexSheet(IntPtr handle, bool owns) { _h_VertexSheet = new VertexSheetHandle(handle, owns); }
+
+        private static IntPtr _New_default()
+        {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexSheet_new_default(out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+        }
+        public VertexSheet() : this(_New_default(), true) {}
+
+        private static IntPtr _New_agg(Vector<VertexEntry> entries)
+        {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexSheet_new_agg(entries._h, out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+        }
+        public VertexSheet(Vector<VertexEntry> entries) : this(_New_agg(entries), true) {}
+
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public VertexSheet(VertexSheet other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(VertexSheet other)
+        {
+            IntPtr _r = NativeMethods.welder_csharp_cases_VertexSheet_clone(other._h_VertexSheet, out WelderError _e);
+            WelderInterop.ThrowIfError(in _e);
+            return _r;
+        }
+
+        public Vector<VertexEntry> Entries
+        {
+            get
+            {
+                IntPtr _r = NativeMethods.welder__field_addr(_h_VertexSheet, 0, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+                var _v = new Vector<VertexEntry>(_r, false, WelderOps_vec_csharp_cases_VertexEntry.Ops);
+                _v._owner = this;
+                return _v;
+            }
+            set
+            {
+                NativeMethods.welder_csharp_cases_VertexSheet_set_entries(_h_VertexSheet, @value._h, out WelderError _e);
+                WelderInterop.ThrowIfError(in _e);
+            }
+        }
+
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
+        public virtual void Dispose() => _h_VertexSheet.Dispose();
+    }
+
     /// <summary>Primary display colors.</summary>
     public enum Color : int
     {
@@ -582,6 +771,17 @@ namespace csharp_cases
         internal object? _owner;
         internal bool _isDirector;
         internal Size(IntPtr handle, bool owns) { _h_Size = new SizeHandle(handle, owns); }
+
+        /// <summary>A blittable value twin of the NATIVE layout (size 8): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 8)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public int Width;
+            [FieldOffset(4)] public int Height;
+        }
 
         private static IntPtr _New_default()
         {
@@ -841,6 +1041,16 @@ namespace csharp_cases
         internal bool _isDirector;
         internal Animal(IntPtr handle, bool owns) { _h_Animal = new AnimalHandle(handle, owns); }
 
+        /// <summary>A blittable value twin of the NATIVE layout (size 4): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 4)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public int Age;
+        }
+
         private static IntPtr _New_default()
         {
             IntPtr _r = NativeMethods.welder_csharp_cases_Animal_new_default(out WelderError _e);
@@ -907,6 +1117,16 @@ namespace csharp_cases
         internal object? _owner;
         internal bool _isDirector;
         internal Legged(IntPtr handle, bool owns) { _h_Legged = new LeggedHandle(handle, owns); }
+
+        /// <summary>A blittable value twin of the NATIVE layout (size 4): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 4)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public int Legs;
+        }
 
         private static IntPtr _New_default()
         {
@@ -1578,6 +1798,17 @@ namespace csharp_cases
         internal bool _isDirector;
         internal Machine(IntPtr handle, bool owns) { _h_Machine = new MachineHandle(handle, owns); }
 
+        /// <summary>A blittable value twin of the NATIVE layout (size 8): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 8)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public Machine.State Power;
+            [FieldOffset(4)] public Machine.Gauge.Data Dial;
+        }
+
     public enum State : byte
     {
         Off = 0,
@@ -1604,6 +1835,16 @@ namespace csharp_cases
         internal object? _owner;
         internal bool _isDirector;
         internal Gauge(IntPtr handle, bool owns) { _h_Machine_Gauge = new GaugeHandle(handle, owns); }
+
+        /// <summary>A blittable value twin of the NATIVE layout (size 4): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 4)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public int Value;
+        }
 
         private static IntPtr _New_default()
         {
@@ -1968,6 +2209,16 @@ namespace csharp_cases
         internal bool _isDirector;
         internal WoodCrate(IntPtr handle, bool owns) { _h_WoodCrate = new WoodCrateHandle(handle, owns); }
 
+        /// <summary>A blittable value twin of the NATIVE layout (size 4): read or write whole
+        /// record buffers through Vector&lt;T&gt;.AsSpan&lt;Data&gt;() / FixedArray&lt;T&gt;.AsSpan&lt;Data&gt;() —
+        /// one interop crossing for the buffer, where the live-view indexer pays per
+        /// element. Field offsets are the native ABI's, asserted in the shim.</summary>
+        [StructLayout(LayoutKind.Explicit, Size = 4)]
+        public unsafe struct Data
+        {
+            [FieldOffset(0)] public int Stamped;
+        }
+
         private static IntPtr _New_default()
         {
             IntPtr _r = NativeMethods.welder_csharp_cases_WoodCrate_new_default(out WelderError _e);
@@ -2057,6 +2308,7 @@ namespace csharp_cases
         internal Action<WelderContainerHandle, long, SafeHandle>? SetAt;
         internal Action<WelderContainerHandle, SafeHandle>? Add;
         internal Action<WelderContainerHandle>? Clear;
+        internal int ElemSize; // native sizeof(element) when T has a blittable Data mirror, else 0
     }
 
     /// <summary>The per-instantiation native operations a FixedArray&lt;T&gt;
@@ -2073,6 +2325,7 @@ namespace csharp_cases
         internal Func<IntPtr, object, T>? View;
         internal Func<T, SafeHandle>? HandleOf;
         internal Action<WelderContainerHandle, long, SafeHandle>? SetAt;
+        internal int ElemSize; // native sizeof(element) when T has a blittable Data mirror, else 0
     }
 
     /// <summary>The element-type → ops registry behind <c>new Vector&lt;T&gt;()</c> and
@@ -2138,6 +2391,28 @@ namespace csharp_cases
                 throw new InvalidOperationException("AsSpan() requires a scalar or enum element type");
             IntPtr _d = _ops.Data(_h);
             var _s = new Span<T>((void*)_d, Count);
+            GC.KeepAlive(this);
+            return _s;
+        }
+        /// <summary>Reinterpret the contiguous native storage as ONE span of blittable
+        /// record values — a single interop crossing for the whole buffer, where the
+        /// live-view indexer pays per element. TData is the element's nested Data
+        /// mirror (size-checked at runtime; the layout itself is asserted in the
+        /// native build). Writes go straight to native memory. Valid until a
+        /// size-changing operation or Dispose.</summary>
+        public unsafe Span<TData> AsSpan<TData>() where TData : unmanaged
+        {
+            if (_ops.ElemSize == 0)
+                throw new InvalidOperationException(
+                    "the element type has no blittable Data mirror");
+            if (sizeof(TData) != _ops.ElemSize)
+                throw new ArgumentException(
+                    "sizeof(" + typeof(TData) + ") != native element size " + _ops.ElemSize);
+            var _n = Count;
+            if (_n == 0)
+                return default;
+            IntPtr _p = _ops.GetAt!(_h, 0);
+            var _s = new Span<TData>((void*)_p, _n);
             GC.KeepAlive(this);
             return _s;
         }
@@ -2240,6 +2515,28 @@ namespace csharp_cases
             GC.KeepAlive(this);
             return _s;
         }
+        /// <summary>Reinterpret the contiguous native storage as ONE span of blittable
+        /// record values — a single interop crossing for the whole buffer, where the
+        /// live-view indexer pays per element. TData is the element's nested Data
+        /// mirror (size-checked at runtime; the layout itself is asserted in the
+        /// native build). Writes go straight to native memory. Valid until a
+        /// size-changing operation or Dispose.</summary>
+        public unsafe Span<TData> AsSpan<TData>() where TData : unmanaged
+        {
+            if (_ops.ElemSize == 0)
+                throw new InvalidOperationException(
+                    "the element type has no blittable Data mirror");
+            if (sizeof(TData) != _ops.ElemSize)
+                throw new ArgumentException(
+                    "sizeof(" + typeof(TData) + ") != native element size " + _ops.ElemSize);
+            var _n = Count;
+            if (_n == 0)
+                return default;
+            IntPtr _p = _ops.GetAt!(_h, 0);
+            var _s = new Span<TData>((void*)_p, _n);
+            GC.KeepAlive(this);
+            return _s;
+        }
         public T this[int i]
         {
             get
@@ -2308,6 +2605,39 @@ namespace csharp_cases
             public T Current => _c[_i];
         }
         public void Dispose() => _h.Dispose();
+    }
+
+    internal static class WelderOps_arrs_sbyte_3
+    {
+        internal static readonly FixedArrayOps<sbyte> Ops = new FixedArrayOps<sbyte>
+        {
+            Count = 3,
+            New = () => { IntPtr _r = NativeMethods.welder_arrs_sbyte_3_new(out WelderError _e); WelderInterop.ThrowIfError(in _e); return _r; },
+            Destroy = NativeMethods.welder_arrs_sbyte_3_destroy,
+            Data = (_h) => { IntPtr _r = NativeMethods.welder_arrs_sbyte_3_data(_h, out WelderError _e); WelderInterop.ThrowIfError(in _e); return _r; },
+            Fill = (_h, _d, _n) => { NativeMethods.welder_arrs_sbyte_3_fill(_h, _d, _n, out WelderError _e); WelderInterop.ThrowIfError(in _e); },
+        };
+        [ModuleInitializer]
+        internal static void Register() => WelderContainers.RegisterFixedArray(Ops);
+    }
+
+    internal static class WelderOps_vec_csharp_cases_VertexEntry
+    {
+        internal static readonly VectorOps<VertexEntry> Ops = new VectorOps<VertexEntry>
+        {
+            New = () => { IntPtr _r = NativeMethods.welder_vec_csharp_cases_VertexEntry_new(out WelderError _e); WelderInterop.ThrowIfError(in _e); return _r; },
+            Destroy = NativeMethods.welder_vec_csharp_cases_VertexEntry_destroy,
+            Size = (_h) => { var _r = NativeMethods.welder_vec_csharp_cases_VertexEntry_size(_h, out WelderError _e); WelderInterop.ThrowIfError(in _e); return _r; },
+            GetAt = (_h, _i) => { IntPtr _r = NativeMethods.welder_vec_csharp_cases_VertexEntry_get(_h, _i, out WelderError _e); WelderInterop.ThrowIfError(in _e); return _r; },
+            View = (_p, _o) => { var _v = new VertexEntry(_p, false); _v._owner = _o; return _v; },
+            HandleOf = (_e2) => _e2._h_VertexEntry,
+            SetAt = (_h, _i, _e2) => { NativeMethods.welder_vec_csharp_cases_VertexEntry_set(_h, _i, _e2, out WelderError _e); WelderInterop.ThrowIfError(in _e); },
+            Add = (_h, _e2) => { NativeMethods.welder_vec_csharp_cases_VertexEntry_add(_h, _e2, out WelderError _e); WelderInterop.ThrowIfError(in _e); },
+            Clear = (_h) => { NativeMethods.welder_vec_csharp_cases_VertexEntry_clear(_h, out WelderError _e); WelderInterop.ThrowIfError(in _e); },
+            ElemSize = 4,
+        };
+        [ModuleInitializer]
+        internal static void Register() => WelderContainers.RegisterVector(Ops);
     }
 
     internal static class WelderOps_vecs_int

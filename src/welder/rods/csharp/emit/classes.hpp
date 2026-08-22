@@ -7,6 +7,7 @@
 #include <welder/rods/csharp/document.hpp>
 #include <welder/rods/csharp/marks.hpp>
 #include <welder/rods/csharp/emit/directors.hpp>
+#include <welder/rods/csharp/emit/mirror.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/spellings.hpp>
 #include <welder/rods/csharp/type_map.hpp>
@@ -252,6 +253,15 @@ class class_opener {
         @param w the class handle under construction. */
     template <class T, auto Bases>
     void finish(class_writer& w) {
+        // The blittable Data mirror (emit/mirror.hpp): a POD record's
+        // explicit-layout twin, nested in the wrapper, plus the shim-side
+        // layout contract. The flush suppresses it if a member is named
+        // Data.
+        if constexpr (pod_mirror_eligible(std::meta::dealias(^^T))) {
+            w.mirror = mirror_struct_text<std::meta::dealias(^^T)>();
+            emit_mirror_asserts<std::meta::dealias(^^T)>(*_module.doc,
+                                                         w.cpp_anchor);
+        }
         // Welded bases: the FIRST becomes the C# base class (the internal
         // constructor chains an upcast pointer down); every FURTHER one gets a
         // non-owning As<Base>() view — C# has single inheritance, so the extra

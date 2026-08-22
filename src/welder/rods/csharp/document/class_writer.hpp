@@ -87,6 +87,9 @@ struct class_writer {
     std::vector<std::string> surface_names{};
     std::vector<std::string> nested_names{};
     std::string members{};        /**< Accumulated property/method/ctor text. */
+    /** The nested blittable `Data` mirror text (emit/mirror.hpp), or empty.
+        Appended at flush, unless a member claimed the name. */
+    std::string mirror{};
     /** Whether this class carries the rod's
         `[[=welder::rods::csharp::family_surface]]` opt-in — the render-time
         family synthesis hoists onto a base ONLY when the base is marked. */
@@ -138,6 +141,7 @@ struct class_writer {
         surface_names = std::move(o.surface_names);
         nested_names = std::move(o.nested_names);
         members = std::move(o.members);
+        mirror = std::move(o.mirror);
         family_marked = o.family_marked;
         family_members = std::move(o.family_members);
         comparisons = std::move(o.comparisons);
@@ -349,6 +353,20 @@ struct class_writer {
                             "forbids this, CS0102); rename one side with "
                             "[[=welder::weld_as]]",
                             cs_path, n, cs_path, n);
+            if (!mirror.empty()) {
+                bool taken{false};
+                for (const auto* names : {&surface_names, &nested_names})
+                    for (const auto& n : *names)
+                        if (n == "Data")
+                            taken = true;
+                if (taken) {
+                    w.line("// (no blittable Data mirror: a member of this "
+                           "class claims the name)");
+                } else {
+                    nested_names.push_back("Data");
+                    w.raw(mirror);
+                }
+            }
             w.raw(members);
             w.raw(flush_comparisons());
             // Dispose is DETERMINISTIC release, not the only release: the

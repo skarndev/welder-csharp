@@ -26,6 +26,25 @@
 
 namespace csharp_cases {
 
+// --- blittable Data mirrors (the POD bulk path) ------------------------------
+// The per-vertex-record shape: nothing but fixed-width leaves, held in a
+// vector — read and written in bulk through Vector<T>.AsSpan<VertexEntry.Data>().
+struct
+[[=welder::weld]]
+[[=welder::doc("One per-vertex record: a tag byte and a packed 3-component normal.")]]
+VertexEntry {
+    std::int8_t tag{};
+    std::array<std::int8_t, 3> normal{};
+};
+
+struct
+[[=welder::weld]]
+[[=welder::doc("A vertex buffer: the vector of records the bulk span reinterprets.")]]
+VertexSheet {
+    std::vector<VertexEntry> entries{};
+};
+
+
 // --- enums (bind as C# `enum : <underlying>`, per-enumerator docs) -----------
 
 enum class [[=welder::weld(welder::rods::csharp::cs)]]
