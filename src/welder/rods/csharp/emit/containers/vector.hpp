@@ -220,7 +220,12 @@ class vector_wrapper_emitter {
         // nested Data type of T" (C# has no associated types), but the
         // generator knows the pairing — an extension per instantiation
         // hides the type argument: v.AsDataSpan() == v.AsSpan<T.Data>().
-        if (_elem_size != 0) {
+        // One extension per ELEMENT type: several extents of
+        // std::array<E, N> share one FixedArray<E> C# type, and the
+        // extension is instance-ops-driven anyway.
+        if (_elem_size != 0 &&
+            _doc->claim_container("dataspan:vec:" +
+                                  _element_ref)) {
             w.line("public static partial class SpanExtensions");
             {
                 const auto cls{w.braces()};

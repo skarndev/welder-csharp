@@ -173,7 +173,12 @@ class fixed_wrapper_emitter {
         }
         w.blank();
         // The typed bulk-span sugar (see the vector emitter's note).
-        if (_elem_size != 0) {
+        // One extension per ELEMENT type: several extents of
+        // std::array<E, N> share one FixedArray<E> C# type, and the
+        // extension is instance-ops-driven anyway.
+        if (_elem_size != 0 &&
+            _doc->claim_container("dataspan:fixed:" +
+                                  _element_ref)) {
             w.line("public static partial class SpanExtensions");
             {
                 const auto cls{w.braces()};
