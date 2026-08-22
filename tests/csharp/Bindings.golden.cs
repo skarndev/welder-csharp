@@ -416,12 +416,13 @@ namespace csharp_cases
         }
         public Point(int x_, int y_) : this(_New_1(x_, y_), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Point Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Point(Point other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Point other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Point_clone(_h_Point, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Point_clone(other._h_Point, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Point(_r, true);
+            return _r;
         }
 
         public int X
@@ -555,6 +556,9 @@ namespace csharp_cases
         /// <summary>Reference-identity hash (the C++ type has no hash to mirror).</summary>
         public override int GetHashCode() => base.GetHashCode();
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Point.Dispose();
     }
 
@@ -595,12 +599,13 @@ namespace csharp_cases
         }
         public Size(int width, int height) : this(_New_agg(width, height), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Size Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Size(Size other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Size other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Size_clone(_h_Size, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Size_clone(other._h_Size, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Size(_r, true);
+            return _r;
         }
 
         public int Width
@@ -633,6 +638,9 @@ namespace csharp_cases
             }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Size.Dispose();
     }
 
@@ -665,12 +673,13 @@ namespace csharp_cases
         }
         public Holder() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Holder Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Holder(Holder other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Holder other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Holder_clone(_h_Holder, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Holder_clone(other._h_Holder, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Holder(_r, true);
+            return _r;
         }
 
         public Point Item()
@@ -705,6 +714,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Holder.Dispose();
     }
 
@@ -745,12 +757,13 @@ namespace csharp_cases
         }
         public Segment(Point a, Point b) : this(_New_1(a, b), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Segment Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Segment(Segment other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Segment other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Segment_clone(_h_Segment, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Segment_clone(other._h_Segment, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Segment(_r, true);
+            return _r;
         }
 
         public Point Start
@@ -801,6 +814,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Segment.Dispose();
     }
 
@@ -833,12 +849,13 @@ namespace csharp_cases
         }
         public Animal() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Animal Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Animal(Animal other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Animal other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Animal_clone(_h_Animal, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Animal_clone(other._h_Animal, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Animal(_r, true);
+            return _r;
         }
 
         public int Age
@@ -864,6 +881,9 @@ namespace csharp_cases
             finally { NativeMethods.welder_free(_r); }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Animal.Dispose();
     }
 
@@ -896,12 +916,13 @@ namespace csharp_cases
         }
         public Legged() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Legged Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Legged(Legged other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Legged other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Legged_clone(_h_Legged, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Legged_clone(other._h_Legged, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Legged(_r, true);
+            return _r;
         }
 
         public int Legs
@@ -919,6 +940,9 @@ namespace csharp_cases
             }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Legged.Dispose();
     }
 
@@ -959,12 +983,13 @@ namespace csharp_cases
         }
         public Dog() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Dog Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Dog(Dog other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Dog other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Dog_clone(_h_Dog, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Dog_clone(other._h_Dog, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Dog(_r, true);
+            return _r;
         }
 
         public string Bark()
@@ -975,6 +1000,9 @@ namespace csharp_cases
             finally { NativeMethods.welder_free(_r); }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public override void Dispose() { _h_Dog.Dispose(); base.Dispose(); }
     }
 
@@ -1007,12 +1035,13 @@ namespace csharp_cases
         }
         public Basket() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Basket Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Basket(Basket other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Basket other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Basket_clone(_h_Basket, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Basket_clone(other._h_Basket, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Basket(_r, true);
+            return _r;
         }
 
         public Vector<int> Nums
@@ -1129,6 +1158,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Basket.Dispose();
     }
 
@@ -1161,12 +1193,13 @@ namespace csharp_cases
         }
         public Route() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Route Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Route(Route other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Route other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Route_clone(_h_Route, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Route_clone(other._h_Route, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Route(_r, true);
+            return _r;
         }
 
         public Vector<Point> Stops
@@ -1207,6 +1240,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Route.Dispose();
     }
 
@@ -1239,12 +1275,13 @@ namespace csharp_cases
         }
         public Depot() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Depot Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Depot(Depot other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Depot other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Depot_clone(_h_Depot, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Depot_clone(other._h_Depot, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Depot(_r, true);
+            return _r;
         }
 
         public MapStrPoint Sites
@@ -1295,6 +1332,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Depot.Dispose();
     }
 
@@ -1327,12 +1367,13 @@ namespace csharp_cases
         }
         public Cable() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Cable Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Cable(Cable other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Cable other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Cable_clone(_h_Cable, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Cable_clone(other._h_Cable, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Cable(_r, true);
+            return _r;
         }
 
         public FixedArray<Point> Ends
@@ -1359,6 +1400,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Cable.Dispose();
     }
 
@@ -1456,12 +1500,13 @@ namespace csharp_cases
         }
         public Shape() : this(_New_default(), true) { _DirBind(); }
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Shape Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Shape(Shape other) : this(_Clone(other), true) { _DirBind(); }
+        private static IntPtr _Clone(Shape other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Shape_clone(_h_Shape, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Shape_clone(other._h_Shape, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Shape(_r, true);
+            return _r;
         }
 
         public virtual string Name()
@@ -1506,6 +1551,9 @@ namespace csharp_cases
             finally { NativeMethods.welder_free(_r); }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Shape.Dispose();
     }
 
@@ -1573,12 +1621,13 @@ namespace csharp_cases
         }
         public Gauge(int v) : this(_New_1(v), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Gauge Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Gauge(Gauge other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Gauge other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Machine_Gauge_clone(_h_Machine_Gauge, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Machine_Gauge_clone(other._h_Machine_Gauge, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Gauge(_r, true);
+            return _r;
         }
 
         public int Value
@@ -1596,6 +1645,9 @@ namespace csharp_cases
             }
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Machine_Gauge.Dispose();
     }
 
@@ -1607,12 +1659,13 @@ namespace csharp_cases
         }
         public Machine() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Machine Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Machine(Machine other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Machine other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Machine_clone(_h_Machine, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Machine_clone(other._h_Machine, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Machine(_r, true);
+            return _r;
         }
 
         public Machine.State Power
@@ -1660,6 +1713,9 @@ namespace csharp_cases
             return new Machine.Gauge(_r, true);
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Machine.Dispose();
     }
 
@@ -1692,12 +1748,13 @@ namespace csharp_cases
         }
         public Terrain() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Terrain Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Terrain(Terrain other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Terrain other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Terrain_clone(_h_Terrain, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Terrain_clone(other._h_Terrain, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Terrain(_r, true);
+            return _r;
         }
 
         public Vector<Vector<byte>> Layers
@@ -1772,6 +1829,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Terrain.Dispose();
     }
 
@@ -1804,12 +1864,13 @@ namespace csharp_cases
         }
         public Catalog() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public Catalog Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public Catalog(Catalog other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(Catalog other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_Catalog_clone(_h_Catalog, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_Catalog_clone(other._h_Catalog, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new Catalog(_r, true);
+            return _r;
         }
 
         public string[] Entries
@@ -1880,6 +1941,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_Catalog.Dispose();
     }
 
@@ -1912,12 +1976,13 @@ namespace csharp_cases
         }
         public WoodCrate() : this(_New_default(), true) {}
 
-        /// <summary>Copy this instance (the C++ copy constructor).</summary>
-        public WoodCrate Clone()
+        /// <summary>Copy-construct: a deep copy of <paramref name="other"/> (the C++ copy constructor).</summary>
+        public WoodCrate(WoodCrate other) : this(_Clone(other), true) {}
+        private static IntPtr _Clone(WoodCrate other)
         {
-            IntPtr _r = NativeMethods.welder_csharp_cases_WoodCrate_clone(_h_WoodCrate, out WelderError _e);
+            IntPtr _r = NativeMethods.welder_csharp_cases_WoodCrate_clone(other._h_WoodCrate, out WelderError _e);
             WelderInterop.ThrowIfError(in _e);
-            return new WoodCrate(_r, true);
+            return _r;
         }
 
         public int Weigh(int units)
@@ -1949,6 +2014,9 @@ namespace csharp_cases
             return _r;
         }
 
+        /// <summary>Release the native object now. Optional: the finalizer releases it on
+        /// collection anyway - dispose (or `using`) when you want native memory back
+        /// promptly.</summary>
         public virtual void Dispose() => _h_WoodCrate.Dispose();
     }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <string_view>
@@ -561,7 +562,7 @@ struct document {
         return {};
     }
 
-    /** Synthesize the version-agnostic family surfaces. A FAMILY is two or
+    /** Synthesize the version-agnostic family surfaces. A FAMILY is one or
         more top-level welded classes sharing one welded base; a family whose
         base carries the rod's `[[=welder::rods::csharp::family_surface]]`
         opt-in gains a `partial class` block ON the base holding
@@ -636,20 +637,63 @@ struct document {
             if (!found)
                 families.push_back({base, {&r}});
         }
+        // MULTI-LEVEL families: a marked base's synthesized members join its
+        // OWN manifest (the `synth` ledger below), so a marked grandparent —
+        // a root every family base derives — intersects what its children
+        // GAINED and hoists the truly common contract one level further
+        // (Validate/EnsureValid across every entity, in wowlib's case).
+        // Processing must therefore run CHILD-FAMILIES-FIRST: order by the
+        // depth of each family's base in the welded-base chain, deepest
+        // first.
+        const auto depth_of = [&](const std::string& path) {
+            std::size_t d{0};
+            const family_record* r{record_at(path)};
+            while (r && !r->base_ref.empty() && d < 32) {
+                r = record_at(_resolved_ref(r->base_ref));
+                ++d;
+            }
+            return d;
+        };
+        std::stable_sort(families.begin(), families.end(),
+                         [&](const auto& a, const auto& b) {
+                             return depth_of(a.first) > depth_of(b.first);
+                         });
+        std::vector<std::pair<std::string, std::vector<family_member>>> synth{};
+        const auto synth_of = [&](const std::string& path)
+            -> const std::vector<family_member>* {
+            for (const auto& [k, v] : synth)
+                if (k == path)
+                    return &v;
+            return nullptr;
+        };
         static constexpr const char* reserved[]{
-            "Dispose", "Clone", "ToString", "Equals", "GetHashCode"};
+            "Dispose", "ToString", "Equals", "GetHashCode"};
         const std::string default_arm{
             "default: throw new InvalidOperationException(\"no era dispatch "
             "for \" + GetType().Name);"};
         for (const auto& [base_path, children] : families) {
-            if (children.size() < 2)
-                continue;
+            // The MARK is the opt-in, not the child count: a single-range
+            // family (one welded class deriving a marked base) still gets
+            // its dispatch surface — a one-arm switch — so its base carries
+            // the members a GRANDPARENT family intersects. Skipping it would
+            // punch a hole through every multi-level chain that crosses a
+            // single-range format.
             const family_record* base{record_at(base_path)};
             if (!base || base->nested || !base->marked)
                 continue;
+            // Each child's manifest, with whatever an earlier (deeper)
+            // family synthesized onto it appended.
+            std::vector<std::vector<family_member>> childms{};
+            for (const family_record* c : children) {
+                childms.push_back(c->members);
+                if (const auto* extra{synth_of(c->cs_path)})
+                    childms.back().insert(childms.back().end(),
+                                          extra->begin(), extra->end());
+            }
+            std::vector<family_member> base_synth{};
             std::string body{};
             std::vector<std::string> emitted{};
-            for (const family_member& fm0 : children.front()->members) {
+            for (const family_member& fm0 : childms.front()) {
                 // One hoist per property name / method signature.
                 const std::string key{fm0.method
                                           ? fm0.name + "(" + fm0.params_decl + ")"
@@ -671,9 +715,9 @@ struct document {
                 emitted.push_back(key);
                 // The matching entry on EVERY concrete, or no hoist.
                 std::vector<const family_member*> ms{};
-                for (const family_record* c : children) {
+                for (const auto& cm : childms) {
                     const family_member* hit{nullptr};
-                    for (const family_member& m : c->members)
+                    for (const family_member& m : cm)
                         if (m.name == fm0.name && m.method == fm0.method &&
                             (!m.method || m.params_decl == fm0.params_decl))
                             hit = &m;
@@ -705,6 +749,9 @@ struct document {
                                 "\n";
                     body += "                " + default_arm +
                             "\n            }\n        }\n\n";
+                    family_member made{fm0};
+                    made.doc.clear();
+                    base_synth.push_back(std::move(made));
                     continue;
                 }
                 // Properties: exact-type, welded-base, or sequence-of-welded.
@@ -785,6 +832,11 @@ struct document {
                             "\n                }\n            }\n";
                 }
                 body += "        }\n\n";
+                family_member made{};
+                made.name = fm0.name;
+                made.type_str = hoist_type;
+                made.settable = settable;
+                base_synth.push_back(std::move(made));
             }
             if (body.empty())
                 continue;
@@ -802,6 +854,7 @@ struct document {
             block += body;
             block += "    }\n\n";
             out.blocks.push_back({base->cs_ns, std::move(block)});
+            synth.push_back({base->cs_path, std::move(base_synth)});
         }
         return out;
     }

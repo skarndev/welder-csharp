@@ -16,8 +16,8 @@
     @ref welder::rods::csharp::constructor_emitter — a parameterless form, one
     per admitted declared constructor, the synthesized aggregate field
     constructor, and — for a copyable type — the copy constructor as the managed
-    `Clone()` (C# has no copy-constructor protocol, and a `T(other)` overload
-    would collide with a one-argument user constructor).
+    a real `public T(T other)` copy constructor (the BCL's own idiom for
+    copy construction).
 
     Two details are structural rather than cosmetic. A **director-eligible**
     type is constructed AS its director subclass, so a C# subclass can override
@@ -156,10 +156,14 @@ class constructor_emitter {
         mw.blank();
     }
 
-    /** Emit the admitted copy constructor as the managed `Clone()` — a clone
-        thunk over the C++ copy constructor, and a `public T Clone()` wrapper.
-        (Not a `T(other)` constructor overload: it would collide with a
-        one-argument user constructor.) */
+    /** Emit the admitted copy constructor as a real C# COPY CONSTRUCTOR —
+        `public T(T other)` over a clone thunk — the idiom the BCL itself
+        uses (`List<T>(IEnumerable<T>)`, `Dictionary(IDictionary)`), reading
+        as construction rather than as a method sprouting from the source.
+        The only possible collision is a declared C++ one-argument
+        constructor whose parameter is the class ITSELF — which IS a copy
+        constructor and is admitted through this path, never through the
+        declared group, so both cannot be emitted. */
     void emit_clone() {
         const bound_symbol bs{*_writer.doc, _writer.sym_prefix + "_clone", _writer.members, 2};
         code_writer t{bs.thunk()};
@@ -172,15 +176,20 @@ class constructor_emitter {
             "out WelderError err);",
             bs.name(), _writer.handle_cs);
         code_writer mw{bs.wrapper()};
-        mw.line("/// <summary>Copy this instance (the C++ copy "
-                "constructor).</summary>");
-        mw.line("public {} Clone()", _writer.cs_name);
+        mw.line("/// <summary>Copy-construct: a deep copy of {} (the C++ "
+                "copy constructor).</summary>",
+                "<paramref name=\"other\"/>");
+        mw.line("public {}({} other) : this(_Clone(other), true) {}",
+                _writer.cs_name, _writer.cs_name,
+                _writer.is_director ? "{ _DirBind(); }" : "{}");
+        mw.line("private static IntPtr _Clone({} other)", _writer.cs_name);
         {
             const auto body{mw.braces()};
-            mw.line("IntPtr _r = NativeMethods.{}({}, out WelderError _e);",
+            mw.line("IntPtr _r = NativeMethods.{}(other.{}, out WelderError "
+                    "_e);",
                     bs.name(), _writer.handle_field);
             mw.line("WelderInterop.ThrowIfError(in _e);");
-            mw.line("return new {}(_r, true);", _writer.cs_name);
+            mw.line("return _r;");
         }
         mw.blank();
     }

@@ -120,6 +120,30 @@ public class FamilyTests
     }
 
     [Fact]
+    public void GrandparentRootHoistsTheSharedContract()
+    {
+        // Multi-level: GadgetBase and WidgetBase both derive EntityRoot, and
+        // their FAMILIES both synthesize Span() — so the marked root hoists
+        // it, and one EntityRoot-typed reference dispatches across BOTH
+        // hierarchies, two switch levels deep.
+        using var w = new WidgetV2();
+        using var g = new GadgetV1();
+        EntityRoot rw = w, rg = g;
+        Assert.Equal(20, rw.Span());
+        Assert.Equal(1, rg.Span());
+        // The single-range family: its base synthesizes a one-arm dispatch,
+        // so the chain root -> LoneBase -> LoneV1 resolves too.
+        using var lone = new LoneV1();
+        EntityRoot rl = lone;
+        Assert.Equal(201, rl.Span());
+        LoneBase lb = lone;
+        Assert.Equal(201, lb.Span());
+        // Family-specific members do NOT leak to the root.
+        Assert.Null(typeof(EntityRoot).GetMethod("Era"));
+        Assert.Null(typeof(EntityRoot).GetProperty("Power"));
+    }
+
+    [Fact]
     public void BareBaseThrowsFromTheDefaultArm()
     {
         using var bare = new WidgetBase();
