@@ -131,6 +131,13 @@ public class FamilyTests
         EntityRoot rw = w, rg = g;
         Assert.Equal(20, rw.Span());
         Assert.Equal(1, rg.Span());
+        // The single-range family: its base synthesizes a one-arm dispatch,
+        // so the chain root -> LoneBase -> LoneV1 resolves too.
+        using var lone = new LoneV1();
+        EntityRoot rl = lone;
+        Assert.Equal(201, rl.Span());
+        LoneBase lb = lone;
+        Assert.Equal(201, lb.Span());
         // Family-specific members do NOT leak to the root.
         Assert.Null(typeof(EntityRoot).GetMethod("Era"));
         Assert.Null(typeof(EntityRoot).GetProperty("Power"));

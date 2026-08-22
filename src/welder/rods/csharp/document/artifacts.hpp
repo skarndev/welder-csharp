@@ -562,7 +562,7 @@ struct document {
         return {};
     }
 
-    /** Synthesize the version-agnostic family surfaces. A FAMILY is two or
+    /** Synthesize the version-agnostic family surfaces. A FAMILY is one or
         more top-level welded classes sharing one welded base; a family whose
         base carries the rod's `[[=welder::rods::csharp::family_surface]]`
         opt-in gains a `partial class` block ON the base holding
@@ -672,8 +672,12 @@ struct document {
             "default: throw new InvalidOperationException(\"no era dispatch "
             "for \" + GetType().Name);"};
         for (const auto& [base_path, children] : families) {
-            if (children.size() < 2)
-                continue;
+            // The MARK is the opt-in, not the child count: a single-range
+            // family (one welded class deriving a marked base) still gets
+            // its dispatch surface — a one-arm switch — so its base carries
+            // the members a GRANDPARENT family intersects. Skipping it would
+            // punch a hole through every multi-level chain that crosses a
+            // single-range format.
             const family_record* base{record_at(base_path)};
             if (!base || base->nested || !base->marked)
                 continue;

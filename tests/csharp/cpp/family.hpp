@@ -88,6 +88,33 @@ Widget : WidgetBase {
 using WidgetV1 = Widget<1>;
 using WidgetV2 = Widget<2>;
 
+// A SINGLE-RANGE family under the root (one concrete for its whole
+// version span — the shape that used to fall through the old two-child
+// minimum): its base must still synthesize the one-arm dispatch, or the
+// root's intersection dies here.
+struct
+[[=welder::weld]]
+[[=welder::rods::csharp::family_surface]]
+LoneBase : EntityRoot {};
+
+template <int V>
+struct
+[[=welder::weld]]
+Lone : LoneBase {
+    int span() const { return V + 200; }
+};
+using LoneV1 = Lone<1>;
+
+// A DIRECT child of the root that is not itself a family base (the shape an
+// unversioned entity takes beside the versioned families): its rod-emitted
+// members join the root's intersection like a family's synthesized ones.
+struct
+[[=welder::weld]]
+Solo : EntityRoot {
+    int solo_only{3};
+    int span() const { return 100; }
+};
+
 // The opt-in default: NO family_surface mark, so although this family's
 // intersection is perfectly hoistable, the rod must synthesize nothing —
 // UnmarkedBase stays the bare handle-only base it always was.
