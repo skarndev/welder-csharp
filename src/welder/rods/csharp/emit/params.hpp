@@ -190,8 +190,11 @@ void append_one_param(call_pieces& cp, std::size_t j, const char* csname) {
         else // integral scalar / enum
             cp.wrapper_args += name + ".HasValue ? new WelderOptWire { Has = 1, "
                                "I = (long)" + name + ".Value } : default";
-    } else if constexpr (classify(PT) == marshal_kind::seq_ref ||
-                         classify(PT) == marshal_kind::map_ref) {
+    } else if constexpr (classify(PT) == marshal_kind::seq_ref) {
+        // The generic Vector<T>/FixedArray<T> wrappers carry one fixed
+        // handle field.
+        cp.wrapper_args += name + "._h";
+    } else if constexpr (classify(PT) == marshal_kind::map_ref) {
         cp.wrapper_args += name + "._h_" + container_ref<bare(PT)>();
     } else if constexpr (classify(PT) == marshal_kind::shared_ptr_) {
         cp.wrapper_args +=

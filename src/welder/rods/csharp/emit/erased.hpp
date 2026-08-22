@@ -13,9 +13,9 @@
 
     The bespoke field path emits one `extern "C"` thunk + one `[LibraryImport]`
     per accessor per member. On a surface dominated by flat data records that
-    is the whole cost of the build: wowlib's ClientDB concretes put ~110k
-    P/Invokes through the interop source generator and the same number of
-    thunk instantiations through gcc. But a data member at a KNOWN OFFSET
+    is the whole cost of the build: a record-heavy consumer surface (measured)
+    put ~110k P/Invokes through the interop source generator and the same
+    number of thunk instantiations through gcc. But a data member at a KNOWN OFFSET
     needs no per-member code at all — a typed load/store at `self + off` is
     exactly what the bespoke thunk compiles to. So the document carries ~25
     fixed entry points (one per scalar width, plus address/string forms), the

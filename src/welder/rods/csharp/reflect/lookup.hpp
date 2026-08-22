@@ -186,7 +186,7 @@ consteval std::optional<std::meta::info> find_named_field(std::meta::info owner,
     // A FLATTENED base's field: welder binds a non-welded base's members onto
     // the derived type, and the generator anchors the lookup on the derived
     // type whenever the declaring scope has no spellable name (a class-template
-    // specialization base — `M2Root<V> : DataPreWotlk<V>`). Derived-first, so a
+    // specialization base — `Record<V> : LegacyFields<V>`). Derived-first, so a
     // shadowing field still wins.
     if (std::meta::is_class_type(owner))
         for (std::meta::info b : ::welder::public_bases(owner))

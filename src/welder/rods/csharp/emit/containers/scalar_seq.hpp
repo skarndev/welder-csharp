@@ -6,6 +6,7 @@
 
 #include <welder/rods/csharp/document.hpp>
 #include <welder/rods/csharp/emit/containers/element.hpp>
+#include <welder/rods/csharp/emit/containers/generic.hpp>
 #include <welder/rods/csharp/emit/params.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/returns.hpp>
@@ -95,12 +96,18 @@ class scalar_seq_wrapper_emitter {
                      : "welder_vecs_" + std::string{tok};
         _template_args = fixed ? "^^" + std::string{ecpp} + ", " + _extent_text
                        : "^^" + std::string{ecpp};
-        _wrapper_name = fixed ? "Array" + ename + "x" + _extent_text : "Vector" + ename;
-        _doc->record_type_name(key, _wrapper_name);
+        // The wrapper TYPE is one of the two generics; this instantiation
+        // contributes only its ops object (see containers/generic.hpp).
+        _doc->record_type_name(key, (fixed ? "FixedArray<" : "Vector<") +
+                                        _element_cs + ">");
+        _ops_holder = "WelderOps_" + _symbol_stem.substr(7); // strip "welder_"
+        _doc->record_type_name("ops:" + std::string{key},
+                               _ops_holder + ".Ops");
         _family_prefix = fixed ? "arr" : "vec";
+        ensure_container_scaffolding(*_doc);
         emit_thunks();
         emit_pinvokes();
-        emit_wrapper();
+        emit_ops();
     }
 
   private:
@@ -147,7 +154,8 @@ class scalar_seq_wrapper_emitter {
     }
 
     /** Write the `[LibraryImport]` declarations for the op thunks (the
-        vector-only trio branches like the thunks). */
+        vector-only trio branches like the thunks). Every self parameter is
+        the ONE shared container handle class. */
     void emit_pinvokes() {
         code_writer p{_doc->pinvoke, 2};
         p.line("[LibraryImport(Lib)] internal static partial IntPtr "
@@ -157,148 +165,81 @@ class scalar_seq_wrapper_emitter {
                "_destroy(IntPtr self);",
                _symbol_stem);
         p.line("[LibraryImport(Lib)] internal static partial IntPtr "
-               "{}_data({}Handle self, out WelderError err);",
-               _symbol_stem, _wrapper_name);
+               "{}_data(WelderContainerHandle self, out WelderError err);",
+               _symbol_stem);
         p.line("[LibraryImport(Lib)] internal static partial void {}"
-               "_fill({}Handle self, IntPtr data, long len, out "
+               "_fill(WelderContainerHandle self, IntPtr data, long len, out "
                "WelderError err);",
-               _symbol_stem, _wrapper_name);
+               _symbol_stem);
         if (!_fixed) {
             p.line("[LibraryImport(Lib)] internal static partial long "
-                   "{}_size({}Handle self, out WelderError err);",
-                   _symbol_stem, _wrapper_name);
+                   "{}_size(WelderContainerHandle self, out WelderError err);",
+                   _symbol_stem);
             p.line("[LibraryImport(Lib)] internal static partial void "
-                   "{}_push({}Handle self, {} v, out WelderError err);",
-                   _symbol_stem, _wrapper_name, _element_wire_cs);
+                   "{}_push(WelderContainerHandle self, {} v, out WelderError "
+                   "err);",
+                   _symbol_stem, _element_wire_cs);
             p.line("[LibraryImport(Lib)] internal static partial void "
-                   "{}_clear({}Handle self, out WelderError err);",
-                   _symbol_stem, _wrapper_name);
+                   "{}_clear(WelderContainerHandle self, out WelderError err);",
+                   _symbol_stem);
         }
     }
 
-    /** Write the managed side: the `SafeHandle` owning the native sequence
-        and the public wrapper class — `Count` (constant when fixed),
-        `AsSpan()`, the span-backed indexer, `Add`/`Clear` (vector only),
-        `ToArray`, `CopyFrom`, the implicit `T[]` conversion, `Dispose`. */
-    void emit_wrapper() {
+    /** Write the managed side: the instantiation's OPS HOLDER — a static
+        class carrying the `VectorOps<T>`/`FixedArrayOps<T>` object whose
+        delegates wrap the op P/Invokes (the enum-element push casts inside
+        its lambda), plus — vector only — the `[ModuleInitializer]` that
+        registers the ops so `new Vector<T>()` and the implicit `T[]`
+        conversion resolve them. No wrapper class: the TYPE is the shared
+        generic. */
+    void emit_ops() {
         code_writer w{_doc->containers, 1};
-        w.line("internal sealed class {}Handle : SafeHandle", _wrapper_name);
+        w.line("internal static class {}", _ops_holder);
         {
             const auto cls{w.braces()};
-            w.line("internal {}Handle(IntPtr handle, bool owns) : "
-                   "base(IntPtr.Zero, owns)",
-                   _wrapper_name);
+            const char* ops_t{_fixed ? "FixedArrayOps" : "VectorOps"};
+            w.line("internal static readonly {}<{}> Ops = new {}<{}>", ops_t,
+                   _element_cs, ops_t, _element_cs);
             {
-                const auto body{w.braces()};
-                w.line("SetHandle(handle);");
-            }
-            w.line("public override bool IsInvalid => handle == IntPtr.Zero;");
-            w.line("protected override bool ReleaseHandle()");
-            {
-                const auto body{w.braces()};
-                w.line("NativeMethods.{}_destroy(handle);", _symbol_stem);
-                w.line("return true;");
-            }
-        }
-        w.blank();
-        w.line("/// <summary>A reference-semantic C++ {}{} (live element "
-               "access; AsSpan() is a zero-copy view over the C++ buffer, "
-               "valid until a size-changing operation or Dispose).</summary>",
-               _fixed ? "std::array of " + _extent_text + " " : std::string{"vector of "},
-               _element_cs);
-        w.line("public sealed class {} : IDisposable", _wrapper_name);
-        {
-            const auto cls{w.braces()};
-            w.line("internal {}Handle _h_{};", _wrapper_name, _wrapper_name);
-            w.line("internal object? _owner;");
-            w.line("internal {}(IntPtr handle, bool owns) { _h_{} = new "
-                   "{}Handle(handle, owns); }",
-                   _wrapper_name, _wrapper_name, _wrapper_name);
-            // An empty C# body is a literal "{}" — an argument, never format
-            // text (cat would eat it as a placeholder).
-            w.line("public {}() : this(_New(), true) {}", _wrapper_name, "{}");
-            w.line("private static IntPtr _New()");
-            {
-                const auto body{w.braces()};
-                w.line("IntPtr _r = NativeMethods.{}_new(out WelderError _e);",
+                const auto init{w.braces_semi()};
+                if (_fixed)
+                    w.line("Count = {},", _extent_text);
+                w.line("New = () => { IntPtr _r = NativeMethods.{}_new(out "
+                       "WelderError _e); WelderInterop.ThrowIfError(in _e); "
+                       "return _r; },",
                        _symbol_stem);
-                w.line("WelderInterop.ThrowIfError(in _e);");
-                w.line("return _r;");
+                w.line("Destroy = NativeMethods.{}_destroy,", _symbol_stem);
+                if (!_fixed)
+                    w.line("Size = (_h) => { var _r = NativeMethods.{}_size("
+                           "_h, out WelderError _e); WelderInterop."
+                           "ThrowIfError(in _e); return _r; },",
+                           _symbol_stem);
+                w.line("Data = (_h) => { IntPtr _r = NativeMethods.{}_data("
+                       "_h, out WelderError _e); WelderInterop.ThrowIfError("
+                       "in _e); return _r; },",
+                       _symbol_stem);
+                if (!_fixed)
+                    w.line("Push = (_h, _v) => { NativeMethods.{}_push(_h, "
+                           "{}, out WelderError _e); WelderInterop."
+                           "ThrowIfError(in _e); },",
+                           _symbol_stem,
+                           _enum_element
+                               ? "(" + _element_wire_cs + ")_v"
+                               : std::string{"_v"});
+                w.line("Fill = (_h, _d, _n) => { NativeMethods.{}_fill(_h, "
+                       "_d, _n, out WelderError _e); WelderInterop."
+                       "ThrowIfError(in _e); },",
+                       _symbol_stem);
+                if (!_fixed)
+                    w.line("Clear = (_h) => { NativeMethods.{}_clear(_h, out "
+                           "WelderError _e); WelderInterop.ThrowIfError(in "
+                           "_e); },",
+                           _symbol_stem);
             }
-            if (_fixed)
-                w.line("public int Count => {};", _extent_text);
-            else {
-                w.line("public int Count");
-                const auto prop{w.braces()};
-                w.line("get");
-                {
-                    const auto arm{w.braces()};
-                    w.line("var _r = NativeMethods.{}_size(_h_{}, out "
-                           "WelderError _e);",
-                           _symbol_stem, _wrapper_name);
-                    w.line("WelderInterop.ThrowIfError(in _e);");
-                    w.line("return (int)_r;");
-                }
-            }
-            w.line("public unsafe Span<{}> AsSpan()", _element_cs);
-            {
-                const auto body{w.braces()};
-                w.line("IntPtr _d = NativeMethods.{}_data(_h_{}, out "
-                       "WelderError _e);",
-                       _symbol_stem, _wrapper_name);
-                w.line("WelderInterop.ThrowIfError(in _e);");
-                w.line("var _s = new Span<{}>((void*)_d, Count);", _element_cs);
-                w.line("GC.KeepAlive(this);");
-                w.line("return _s;");
-            }
-            w.line("public {} this[int i]", _element_cs);
-            {
-                const auto prop{w.braces()};
-                w.line("get => AsSpan()[i];");
-                w.line("set => AsSpan()[i] = value;");
-            }
-            if (!_fixed) {
-                w.line("public void Add({} item)", _element_cs);
-                {
-                    const auto body{w.braces()};
-                    w.line("NativeMethods.{}_push(_h_{}, {}, out "
-                           "WelderError _e);",
-                           _symbol_stem, _wrapper_name,
-                           _enum_element ? "(" + _element_wire_cs + ")item"
-                                      : std::string{"item"});
-                    w.line("WelderInterop.ThrowIfError(in _e);");
-                }
-                w.line("public void Clear()");
-                {
-                    const auto body{w.braces()};
-                    w.line("NativeMethods.{}_clear(_h_{}, out "
-                           "WelderError _e);",
-                           _symbol_stem, _wrapper_name);
-                    w.line("WelderInterop.ThrowIfError(in _e);");
-                }
-            }
-            w.line("public {}[] ToArray() => AsSpan().ToArray();", _element_cs);
-            w.line("public unsafe void CopyFrom(ReadOnlySpan<{}> src)", _element_cs);
-            {
-                const auto body{w.braces()};
-                w.line("fixed ({}* _p = src)", _element_cs);
-                {
-                    const auto pin{w.braces()};
-                    w.line("NativeMethods.{}_fill(_h_{}, (IntPtr)_p, "
-                           "src.Length, out WelderError _e);",
-                           _symbol_stem, _wrapper_name);
-                    w.line("WelderInterop.ThrowIfError(in _e);");
-                }
-            }
-            w.line("public static implicit operator {}({}[] a)", _wrapper_name, _element_cs);
-            {
-                const auto body{w.braces()};
-                w.line("var _v = new {}();", _wrapper_name);
-                w.line("_v.CopyFrom(a);");
-                w.line("return _v;");
-            }
-            emit_foreach_enumerator(w, _wrapper_name, _element_cs);
-            w.line("public void Dispose() => _h_{}.Dispose();", _wrapper_name);
+            w.line("[ModuleInitializer]");
+            w.line("internal static void Register() => WelderContainers."
+                   "Register{}(Ops);",
+                   _fixed ? "FixedArray" : "Vector");
         }
         w.blank();
     }
@@ -315,8 +256,8 @@ class scalar_seq_wrapper_emitter {
     std::string _symbol_stem{};
     /** The shim's template arguments. */
     std::string _template_args{};
-    /** The wrapper class's name. */
-    std::string _wrapper_name{};
+    /** The ops holder class's name (`WelderOps_<stem>`). */
+    std::string _ops_holder{};
     /** The element's C-ABI wire spelling. */
     std::string _element_wire{};
     /** The element's C# wire spelling. */

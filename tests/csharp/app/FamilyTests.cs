@@ -72,6 +72,15 @@ public class FamilyTests
         }
         Assert.Equal(2, n);
         Assert.Equal(5, sum);            // 4 + the default 1
+
+        // The view's indexer WRITES too, era-checked like every family
+        // setter: a same-era element assigns, a wrong-era one throws.
+        using var replacement = new GadgetV1();
+        replacement.Power = 9;
+        view[1] = replacement;
+        Assert.Equal(9, w.Gadgets[1].Power);
+        using var wrongEra = new GadgetV2();
+        Assert.Throws<InvalidCastException>(() => view[1] = wrongEra);
     }
 
     [Fact]

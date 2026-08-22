@@ -101,8 +101,9 @@ std::string pinvoke_type(bool is_return) {
         return is_return ? std::string{"IntPtr"}
                          : container_ref<bare(Type)>() + "Handle";
     else if constexpr (k == marshal_kind::seq_ref)
+        // Generic Vector<T>/FixedArray<T> wrappers share ONE handle class.
         return is_return ? std::string{"IntPtr"}
-                         : container_ref<bare(Type)>() + "Handle";
+                         : std::string{"WelderContainerHandle"};
     else // handle
         return is_return ? std::string{"IntPtr"}
                          : type_ref<bare(Type)>() + "Handle";
