@@ -216,6 +216,31 @@ class vector_wrapper_emitter {
                    "WelderContainers.RegisterVector(Ops);");
         }
         w.blank();
+        // The typed bulk-span sugar: the generic class cannot spell "the
+        // nested Data type of T" (C# has no associated types), but the
+        // generator knows the pairing — an extension per instantiation
+        // hides the type argument: v.AsDataSpan() == v.AsSpan<T.Data>().
+        // One extension per ELEMENT type: several extents of
+        // std::array<E, N> share one FixedArray<E> C# type, and the
+        // extension is instance-ops-driven anyway.
+        if (_elem_size != 0 &&
+            _doc->claim_container("dataspan:vec:" +
+                                  _element_ref)) {
+            w.line("public static partial class SpanExtensions");
+            {
+                const auto cls{w.braces()};
+                w.line("/// <summary>Zero-copy span of {}.Data over the "
+                       "vector's native storage — one interop\n"
+                       "        /// crossing for the whole record buffer; "
+                       "writable; valid until a size-changing\n"
+                       "        /// operation or Dispose.</summary>",
+                       _element_ref);
+                w.line("public static Span<{}.Data> AsDataSpan(this "
+                       "Vector<{}> v) => v.AsSpan<{}.Data>();",
+                       _element_ref, _element_ref, _element_ref);
+            }
+            w.blank();
+        }
     }
 
     document* _doc; /**< The shared document. */

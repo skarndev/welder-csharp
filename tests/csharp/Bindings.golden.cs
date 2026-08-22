@@ -2640,6 +2640,14 @@ namespace csharp_cases
         internal static void Register() => WelderContainers.RegisterVector(Ops);
     }
 
+    public static partial class SpanExtensions
+    {
+        /// <summary>Zero-copy span of VertexEntry.Data over the vector's native storage — one interop
+        /// crossing for the whole record buffer; writable; valid until a size-changing
+        /// operation or Dispose.</summary>
+        public static Span<VertexEntry.Data> AsDataSpan(this Vector<VertexEntry> v) => v.AsSpan<VertexEntry.Data>();
+    }
+
     internal static class WelderOps_vecs_int
     {
         internal static readonly VectorOps<int> Ops = new VectorOps<int>
