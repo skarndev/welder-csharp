@@ -229,7 +229,7 @@ public class BindingTests
     {
         using (var bk = new Basket())
         {
-            var nums = bk.Nums; // live VectorInt view of the member
+            var nums = bk.Nums; // live Vector<int> view of the member
             Assert.True(nums.Count == 3 && nums[2] == 3,
                         "vector<int> field -> live wrapper");
             nums.Add(4); // writes through to the C++ member
@@ -310,7 +310,7 @@ public class BindingTests
     {
         using var t = new Terrain();
         var layers = t.Layers;                  // a live wrapper over the member
-        layers.Add(new byte[] { 1, 2, 3 });     // implicit byte[] -> VectorByte
+        layers.Add(new byte[] { 1, 2, 3 });     // implicit byte[] -> Vector<byte>
         layers.Add(new byte[] { 9 });
         Assert.Equal(2, layers.Count);
         Assert.Equal(3, layers[0].Count);       // a live view of the inner vector
@@ -327,7 +327,7 @@ public class BindingTests
         Assert.Throws<ArgumentException>(() => bones.Add(new byte[] { 1 }));
 
         var clusters = t.Clusters;              // a nested sequence of a WELDED
-        var group = new VectorPoint();          // element (recursion)
+        var group = new Vector<Point>();        // element (recursion)
         using (var p = new Point(5, 6))
             group.Add(p);
         clusters.Add(group);
@@ -392,7 +392,7 @@ public class BindingTests
                         "owned vector return + indexer");
         stops.Clear();
         Assert.Equal(0, rt.StopCount()); // Clear writes through
-        using (var mine = new VectorPoint())
+        using (var mine = new Vector<Point>())
         {
             using (var p = new Point(7, 0))
                 mine.Add(p);

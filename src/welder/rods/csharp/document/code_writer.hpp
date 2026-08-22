@@ -101,6 +101,35 @@ class code_writer {
         @return the RAII scope. */
     [[nodiscard]] brace_scope braces() { return brace_scope{*this}; }
 
+    /** @ref brace_scope's expression sibling: closes with `};` — an object
+        initializer or array initializer used as a declaration's right-hand
+        side (the generic container ops objects). */
+    class brace_scope_semi {
+      public:
+        /** Open the scope: write the `{` line and deepen @a w by one.
+            @param w the writer the scope indents. */
+        explicit brace_scope_semi(code_writer& w) : _writer{w} {
+            _writer.line("{");
+            ++_writer._depth;
+        }
+        brace_scope_semi(const brace_scope_semi&) = delete;
+        brace_scope_semi& operator=(const brace_scope_semi&) = delete;
+        /** Close the scope: shallow the writer back out and write `};`. */
+        ~brace_scope_semi() {
+            --_writer._depth;
+            _writer.line("};");
+        }
+
+      private:
+        code_writer& _writer; /**< The writer whose depth this scope owns. */
+    };
+
+    /** Open an initializer brace scope (closes with `};`).
+        @return the RAII scope. */
+    [[nodiscard]] brace_scope_semi braces_semi() {
+        return brace_scope_semi{*this};
+    }
+
     /** A writer over the same buffer, @a delta levels deeper — for a nested
         region whose depth outlives no scope (director bodies, `finally` arms).
         @param delta the additional depth.

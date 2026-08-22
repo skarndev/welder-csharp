@@ -78,19 +78,29 @@ std::string wrapper_return_body(const std::string& pc, const std::string& ind,
                        k == marshal_kind::seq_ref ||
                        k == marshal_kind::map_ref) {
         constexpr handle_return hr{handle_return_of(R, Rv)};
+        // A generic Vector<T>/FixedArray<T> is constructed with its
+        // per-instantiation ops object; welded classes and the map wrappers
+        // keep the two-argument form.
+        std::string ctor_tail{std::string{", "} +
+                              (hr == handle_return::view ||
+                                       hr == handle_return::view_keepalive
+                                   ? "false"
+                                   : "true")};
+        if constexpr (k == marshal_kind::seq_ref)
+            ctor_tail += ", " + container_ops_ref<bare(R)>();
         std::string out{ind + "IntPtr _r = " + pc + ";\n" + check};
         if constexpr (handle_return_nullable(R))
             out += ind + "if (_r == IntPtr.Zero) return null;\n";
         if constexpr (hr == handle_return::view ||
                       hr == handle_return::view_keepalive) {
-            out += ind + "var _v = new " + public_type<R, Style>() +
-                   "(_r, false);\n";
+            out += ind + "var _v = new " + public_type<R, Style>() + "(_r" +
+                   ctor_tail + ");\n";
             if (hr == handle_return::view_keepalive && !owner.empty())
                 out += ind + "_v._owner = " + owner + ";\n";
             out += ind + "return _v;\n";
         } else {
-            out += ind + "return new " + public_type<R, Style>() +
-                   "(_r, true);\n";
+            out += ind + "return new " + public_type<R, Style>() + "(_r" +
+                   ctor_tail + ");\n";
         }
         return out;
     } else if constexpr (k == marshal_kind::optional_) {

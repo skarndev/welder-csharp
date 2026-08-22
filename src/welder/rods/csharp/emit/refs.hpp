@@ -89,6 +89,21 @@ std::string container_ref() {
     return std::string{"\x01"} + d + "\x02";
 }
 
+/** A generic container's OPS-INSTANCE reference: the per-instantiation
+    `VectorOps<T>`/`FixedArrayOps<T>` object the generated holder class
+    carries (`WelderOps_vecs_ushort.Ops`). Registered by the container
+    generators under an `ops:`-prefixed key, sharing the display-string key
+    space with @ref container_ref, so a construction site can name the ops
+    without holding the generator's naming logic.
+    @tparam C a reflection of the (bare) container specialization.
+    @return the `\x01ops:display\x02` placeholder text. */
+template <std::meta::info C>
+std::string container_ops_ref() {
+    static constexpr const char* d{
+        std::define_static_string(std::meta::display_string_of(C))};
+    return std::string{"\x01"} + "ops:" + d + "\x02";
+}
+
 /** A welded class/enum reference in a HANDLE-FIELD position: the
     identifier-safe placeholder flavor (a nested type's dotted name sanitizes
     to underscores at render).

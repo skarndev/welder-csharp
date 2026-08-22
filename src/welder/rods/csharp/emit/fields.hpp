@@ -430,6 +430,7 @@ class field_emitter {
                                  "\")"};
         constexpr bool read_only{::welder::member_no_reassign(Mem, cs)};
         const std::string V{container_ref<bare(MT)>()};
+        const std::string ops{container_ops_ref<bare(MT)>()};
         // The getter is a pure member-address handout, so an eligible member
         // erases it to the shared address stub (same wire, no per-member
         // thunk); the setter below keeps its bespoke thunk either way — the
@@ -481,8 +482,8 @@ class field_emitter {
             st.blank();
             set.pinvoke().line(
                 "[LibraryImport(Lib)] internal static partial void {}({} "
-                "self, {}Handle v, out WelderError err);",
-                set.name(), _writer.handle_cs, V);
+                "self, WelderContainerHandle v, out WelderError err);",
+                set.name(), _writer.handle_cs);
         }
         const std::string pname{
             ::welder::name_of<Mem, cs, Style,
@@ -498,7 +499,7 @@ class field_emitter {
                 const auto arm{mw.braces()};
                 mw.line("IntPtr _r = {};", get_call);
                 mw.line("WelderInterop.ThrowIfError(in _e);");
-                mw.line("var _v = new {}(_r, false);", V);
+                mw.line("var _v = new {}(_r, false, {});", V, ops);
                 mw.line("_v._owner = this;");
                 mw.line("return _v;");
             }
@@ -506,9 +507,9 @@ class field_emitter {
                 mw.line("set");
                 {
                     const auto arm{mw.braces()};
-                    mw.line("NativeMethods.{}({}, value._h_{}, out "
+                    mw.line("NativeMethods.{}({}, value._h, out "
                             "WelderError _e);",
-                            setsym, _writer.handle_field, V);
+                            setsym, _writer.handle_field);
                     mw.line("WelderInterop.ThrowIfError(in _e);");
                 }
             }
