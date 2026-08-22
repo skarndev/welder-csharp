@@ -7,6 +7,7 @@
 #include <welder/rods/csharp/document.hpp>
 #include <welder/rods/csharp/emit/containers/element.hpp>
 #include <welder/rods/csharp/emit/containers/generic.hpp>
+#include <welder/rods/csharp/emit/mirror.hpp>
 #include <welder/rods/csharp/emit/params.hpp>
 #include <welder/rods/csharp/emit/refs.hpp>
 #include <welder/rods/csharp/emit/returns.hpp>
@@ -56,6 +57,10 @@ class fixed_wrapper_emitter {
         _welded_elem = welded_elem;
         ensure_element_wrapper<El>(*_doc);
         _symbol_stem = std::string{"welder_arr"} + _extent_text + "_" + symtok_v<El>;
+        if constexpr (welded_elem) {
+            if constexpr (pod_mirror_eligible(std::meta::dealias(El)))
+                _elem_size = std::meta::size_of(std::meta::dealias(El));
+        }
         _template_args = "^^" + element_cpp_spelling<El>() + ", " + _extent_text;
         _element_ref = welded_elem ? type_ref<El>() : container_ref<El>();
         _element_field_ref = welded_elem ? field_ref<El>() : container_ref<El>();
@@ -162,6 +167,8 @@ class fixed_wrapper_emitter {
                        "_i, _e2, out WelderError _e); WelderInterop."
                        "ThrowIfError(in _e); },",
                        _symbol_stem);
+                if (_elem_size != 0)
+                    w.line("ElemSize = {},", _elem_size);
             }
         }
         w.blank();
@@ -184,6 +191,9 @@ class fixed_wrapper_emitter {
     std::string _element_field_ref{};
     /** A nested-container element's ops reference (else empty). */
     std::string _element_ops_ref{};
+    /** `sizeof(element)` when the element has a blittable Data mirror,
+        else 0 — the AsSpan&lt;TData&gt; gate. */
+    std::size_t _elem_size{0};
 };
 
 /** The fixed-size sibling of @ref ensure_vector — `std::array<welded, N>` (or

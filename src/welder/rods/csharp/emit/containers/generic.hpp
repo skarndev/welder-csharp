@@ -79,6 +79,7 @@ inline void ensure_container_scaffolding(document& doc) {
         internal Action<WelderContainerHandle, long, SafeHandle>? SetAt;
         internal Action<WelderContainerHandle, SafeHandle>? Add;
         internal Action<WelderContainerHandle>? Clear;
+        internal int ElemSize; // native sizeof(element) when T has a blittable Data mirror, else 0
     }
 
     /// <summary>The per-instantiation native operations a FixedArray&lt;T&gt;
@@ -95,6 +96,7 @@ inline void ensure_container_scaffolding(document& doc) {
         internal Func<IntPtr, object, T>? View;
         internal Func<T, SafeHandle>? HandleOf;
         internal Action<WelderContainerHandle, long, SafeHandle>? SetAt;
+        internal int ElemSize; // native sizeof(element) when T has a blittable Data mirror, else 0
     }
 
     /// <summary>The element-type → ops registry behind <c>new Vector&lt;T&gt;()</c> and
@@ -160,6 +162,28 @@ inline void ensure_container_scaffolding(document& doc) {
                 throw new InvalidOperationException("AsSpan() requires a scalar or enum element type");
             IntPtr _d = _ops.Data(_h);
             var _s = new Span<T>((void*)_d, Count);
+            GC.KeepAlive(this);
+            return _s;
+        }
+        /// <summary>Reinterpret the contiguous native storage as ONE span of blittable
+        /// record values — a single interop crossing for the whole buffer, where the
+        /// live-view indexer pays per element. TData is the element's nested Data
+        /// mirror (size-checked at runtime; the layout itself is asserted in the
+        /// native build). Writes go straight to native memory. Valid until a
+        /// size-changing operation or Dispose.</summary>
+        public unsafe Span<TData> AsSpan<TData>() where TData : unmanaged
+        {
+            if (_ops.ElemSize == 0)
+                throw new InvalidOperationException(
+                    "the element type has no blittable Data mirror");
+            if (sizeof(TData) != _ops.ElemSize)
+                throw new ArgumentException(
+                    "sizeof(" + typeof(TData) + ") != native element size " + _ops.ElemSize);
+            var _n = Count;
+            if (_n == 0)
+                return default;
+            IntPtr _p = _ops.GetAt!(_h, 0);
+            var _s = new Span<TData>((void*)_p, _n);
             GC.KeepAlive(this);
             return _s;
         }
@@ -259,6 +283,28 @@ inline void ensure_container_scaffolding(document& doc) {
                 throw new InvalidOperationException("AsSpan() requires a scalar or enum element type");
             IntPtr _d = _ops.Data(_h);
             var _s = new Span<T>((void*)_d, Count);
+            GC.KeepAlive(this);
+            return _s;
+        }
+        /// <summary>Reinterpret the contiguous native storage as ONE span of blittable
+        /// record values — a single interop crossing for the whole buffer, where the
+        /// live-view indexer pays per element. TData is the element's nested Data
+        /// mirror (size-checked at runtime; the layout itself is asserted in the
+        /// native build). Writes go straight to native memory. Valid until a
+        /// size-changing operation or Dispose.</summary>
+        public unsafe Span<TData> AsSpan<TData>() where TData : unmanaged
+        {
+            if (_ops.ElemSize == 0)
+                throw new InvalidOperationException(
+                    "the element type has no blittable Data mirror");
+            if (sizeof(TData) != _ops.ElemSize)
+                throw new ArgumentException(
+                    "sizeof(" + typeof(TData) + ") != native element size " + _ops.ElemSize);
+            var _n = Count;
+            if (_n == 0)
+                return default;
+            IntPtr _p = _ops.GetAt!(_h, 0);
+            var _s = new Span<TData>((void*)_p, _n);
             GC.KeepAlive(this);
             return _s;
         }

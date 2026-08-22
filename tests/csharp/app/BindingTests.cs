@@ -458,6 +458,35 @@ public class BindingTests
         }
     }
 
+    [Fact]
+    public unsafe void BlittableRecordSpans()
+    {
+        using var sheet = new VertexSheet();
+        var entries = sheet.Entries;
+        for (int i = 0; i < 3; i++)
+            using (var e = new VertexEntry())
+                entries.Add(e);
+
+        // ONE interop crossing for the whole buffer; reads see native state.
+        var span = entries.AsSpan<VertexEntry.Data>();
+        Assert.Equal(3, span.Length);
+        span[1].Tag = 7;                       // writes go straight to native
+        span[1].Normal[2] = -5;                // fixed buffer = the C++ array
+        Assert.Equal(7, entries[1].Tag);       // observed through the live view
+        Assert.Equal(-5, entries[1].Normal[2]);
+        entries[2].Tag = 9;                    // and the other way around
+        Assert.Equal(9, span[2].Tag);
+
+        // The size gate: a wrong-sized reinterpretation throws.
+        Assert.Throws<ArgumentException>(() => entries.AsSpan<long>());
+        // A non-mirror element type has no record span at all.
+        using var pts = new Vector<Point>();   // Point IS mirror-eligible...
+        _ = pts;                               // ...so use bytes-vs-size below
+        using var t = new Terrain();
+        Assert.Throws<InvalidOperationException>(
+            () => t.Layers.AsSpan<byte>());    // nested-seq elements: no mirror
+    }
+
     private static bool HasCopyCtor(Type t) =>
         t.GetConstructor(new[] { t }) != null;
 
