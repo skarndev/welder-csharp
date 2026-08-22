@@ -73,15 +73,6 @@ struct options {
         bespoke per-member emission for everything (the pre-erasure
         artifact, byte for byte). */
     bool erased_fields{true};
-    /** C# namespace RENAMES, keyed by the dotted path the name style would
-        derive (`"Net.Tcp"`), valued with the full replacement path
-        (`"Net.TCP"`). Applied by `add_submodule` as the walk descends, so
-        a renamed namespace's children derive from the REPLACED path
-        automatically. The C++ side cannot carry this itself: a namespace's
-        C# spelling may be a cased acronym the style cannot infer, and gcc-16
-        drops annotations on namespace declarations entirely (verified), so a
-        `weld_as` there never reaches reflection. */
-    std::vector<std::pair<std::string, std::string>> namespace_renames{};
     /** How many files `Bindings.cs` is split into (default 1 — the single
         file). Unlike @ref shards this is not a compile-time measure: Roslyn is
         indifferent to file count (measured — one 11 MB file and 83 small ones

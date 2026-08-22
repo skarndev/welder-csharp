@@ -295,22 +295,16 @@ struct rod {
 
     /** A nested C++ namespace = a REAL nested C# namespace: extend the dotted
         path; the submodule's types and `Global` members land there. The
-        derived path is checked against @ref options::namespace_renames — the
-        consumer's spelling override for names the style cannot infer (cased
-        acronyms) — and a match substitutes the full replacement path, so a
-        renamed namespace's children chain off the replacement.
+        name arrives ALREADY resolved through welder's naming (`name_of` with
+        `ent_kind::submodule`), so a `[[=welder::weld_as(lang, "TCP")]]` on
+        any declaration of the namespace — the spelling override for cased
+        acronyms the style cannot infer — needs nothing from this rod.
         @param m    the enclosing module handle.
         @param name the nested namespace's C# name.
         @return the submodule handle. */
     static module_type add_submodule(module_type& m, const char* name) {
-        std::string path{m.cs_ns.empty() ? std::string{name}
-                                         : m.cs_ns + "." + name};
-        for (const auto& [from, to] : m.doc->opts.namespace_renames)
-            if (from == path) {
-                path = to;
-                break;
-            }
-        return module_type{m.doc, std::move(path)};
+        return module_type{m.doc, m.cs_ns.empty() ? std::string{name}
+                                                  : m.cs_ns + "." + name};
     }
 
     /** Nothing to close — the document is rendered by @ref generate. */
